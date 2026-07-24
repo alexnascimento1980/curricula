@@ -1,0 +1,38 @@
+version: 2
+updates:
+  # Dependências Python do backend (Flask, ferramentas de qualidade como
+  # ruff/black/isort, etc). O Dependabot abre um PR sempre que alguma
+  # delas lança uma versão nova — inclusive quando a versão nova muda
+  # comportamento padrão (foi exatamente isso que quebrou o CI antes: o
+  # ruff expandiu de 59 para 413 regras habilitadas por padrão numa
+  # release, sem aviso prévio no nosso lado).
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "backend"
+
+  # Dependências do frontend/build (Capacitor, eslint, vitest, etc).
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "frontend"
+
+  # As próprias actions usadas nos workflows (actions/checkout,
+  # actions/setup-python, actions/setup-node...), pra não ficarem presas
+  # em versões antigas/descontinuadas silenciosamente.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "ci"

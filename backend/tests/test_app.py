@@ -326,4 +326,3 @@ def test_rate_limit_bloqueia_apos_10_requisicoes_por_minuto():
     # já que o limite é aplicado antes da lógica da rota
     assert respostas.count(429) >= 2
     app_module.limiter.reset()
-
