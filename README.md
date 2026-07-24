@@ -16,6 +16,7 @@ O **Currícula** é uma aplicação web full-stack para gerar currículos profis
 - **Motor LaTeX:** renderização de alta precisão tipográfica via Jinja2 injetando dados no template `.tex`, com escaping automático de caracteres especiais (`&`, `%`, `#`, `_`, etc.) para evitar quebra de compilação.
 - **Backup automático diário:** workflow do GitHub Actions que exporta os dados dos currículos todo dia, já que o plano gratuito do Supabase não inclui backups.
 - **Pronto para produção:** Docker + Gunicorn, rate limiting, CORS restrito, e modo debug desligado por padrão.
+- **Acessibilidade (WCAG):** navegação completa por teclado, compatibilidade com leitores de tela (labels associados, `aria-live`, modais anunciados corretamente), barra de opções de fonte/contraste/redução de movimento, e PDF gerado com metadados e marcadores de navegação (bookmarks) por seção. Veja a seção "Acessibilidade" abaixo.
 
 ## 🔒 Segurança
 
@@ -29,13 +30,31 @@ Pontos que receberam atenção específica durante o desenvolvimento:
 
 Encontrou uma vulnerabilidade? Veja a política de segurança do repositório para saber como reportar.
 
+## ♿ Acessibilidade
+
+O formulário e o PDF gerado foram revisados com foco em WCAG e uso real com leitor de tela (testado manualmente com NVDA):
+
+**Formulário web**
+
+- Todos os campos (estáticos e os gerados dinamicamente em Experiência/Formação/Cursos/Projetos) têm `<label>` associado via `for`/`id`.
+- Skip link ("Pular para o conteúdo principal"), hierarquia de headings correta (`<h1>` único, seções como `<h2>`), e foco visível reforçado em todos os elementos interativos.
+- Notificações, indicador de "Salvando..." e mensagens de erro usam `aria-live`, sendo anunciados automaticamente por leitores de tela.
+- Modais e o painel lateral de currículos têm `aria-labelledby`, anunciando o título correto ao abrir — e o item de currículo salvo é um `<button>` real, operável por teclado.
+- **Barra de opções de acessibilidade** (botão flutuante ♿): tamanho de fonte em 3 níveis, alto contraste e redução de movimento (`prefers-reduced-motion` respeitado nativamente), com preferências salvas em `localStorage` (`frontend/accessibility.js`).
+
+**PDF gerado**
+
+- Metadados embutidos (título com o nome do candidato, autor, idioma `pdflang`), para leitores de tela e visualizadores de PDF identificarem o documento corretamente.
+- Marcadores de navegação (bookmarks) por seção via `\pdfbookmark`, permitindo pular direto entre Resumo/Experiência/Formação/etc. sem alterar o layout visual.
+- **Limitação conhecida:** o PDF ainda não é totalmente "tagged" (PDF/UA completo) — o texto é lido em ordem correta e a navegação por bookmarks funciona, mas uma auditoria formal (Acrobat Accessibility Checker) ainda reprovaria pela falta da árvore de estrutura semântica completa. Resolver isso exigiria trocar o motor de geração (LuaLaTeX + `tagpdf`, ou HTML→PDF via Prince/WeasyPrint).
+
 ## 🧪 Testes Automatizados
 
-O backend tem uma suíte com **42 testes** (`pytest`), cobrindo validação de dados, escaping de LaTeX, normalização de URLs, e o endpoint de geração de PDF de ponta a ponta (incluindo compilação real com `pdflatex`).
+O backend tem uma suíte com **44 testes** (`pytest`), cobrindo validação de dados, escaping de LaTeX, normalização de URLs, e o endpoint de geração de PDF de ponta a ponta (incluindo compilação real com `pdflatex`).
 
 O frontend tem uma suíte com **21 testes** (`Vitest` + `jsdom`), cobrindo a lógica extraída para `frontend/utils.js`: normalização de URLs, formatação de datas, conversão de arquivo para base64, o toggle "Incluir no PDF?" (sem nunca marcar caixas de seleção como obrigatórias) e o debounce do autosave (incluindo o cenário de trocar de currículo rapidamente).
 
-Ambas rodam automaticamente via GitHub Actions a cada push/PR, junto com um workflow separado de lint/code quality (`ruff`, `black`, `isort`, `eslint`).
+Ambas rodam automaticamente via GitHub Actions a cada push/PR, junto com um workflow separado de lint/code quality (`ruff`, `black`, `isort`, `eslint` — com versões fixadas para evitar quebras inesperadas quando essas ferramentas lançam releases com regras novas habilitadas por padrão). O **Dependabot** (`.github/dependabot.yml`) monitora semanalmente dependências pip, npm e as GitHub Actions usadas nos workflows, abrindo PR automaticamente quando há atualização — cada PR já roda a suíte de CI antes de você decidir se aceita.
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -63,6 +82,7 @@ Ambas rodam automaticamente via GitHub Actions a cada push/PR, junto com um work
 ```
 Currícula/
 ├── .github/
+│   ├── dependabot.yml              # Atualização automática semanal de dependências (pip/npm/actions)
 │   └── workflows/
 │       ├── tests.yml              # CI: roda a suíte de testes a cada push/PR
 │       ├── code-quality.yml       # CI: lint (ruff, black, isort, eslint)
@@ -86,6 +106,7 @@ Currícula/
 ├── frontend/
 │   ├── index.html                 # Interface do usuário (formulário)
 │   ├── script.js                  # Lógica de frontend (auth, currículos, envio de dados)
+│   ├── accessibility.js           # Barra de opções de acessibilidade (fonte/contraste/movimento)
 │   ├── utils.js                   # Funções puras extraídas (testáveis isoladamente)
 │   └── utils.test.js              # Suíte de testes do frontend (Vitest)
 ├── www/                           # Cópia web empacotada pelo Capacitor (sincronizada de frontend/)
