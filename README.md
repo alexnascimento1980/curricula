@@ -109,7 +109,7 @@ Currícula/
 │   ├── accessibility.js           # Barra de opções de acessibilidade (fonte/contraste/movimento)
 │   ├── utils.js                   # Funções puras extraídas (testáveis isoladamente)
 │   └── utils.test.js              # Suíte de testes do frontend (Vitest)
-├── www/                           # Cópia web empacotada pelo Capacitor (sincronizada de frontend/)
+├── www/                           # Pasta empacotada pelo Capacitor (copiada manualmente de frontend/, veja nota abaixo)
 ├── capacitor.config.json
 ├── CHANGELOG.md                   # Histórico de versões do projeto
 ├── CONTRIBUTING.md                # Guia de contribuição
@@ -130,7 +130,7 @@ Currícula/
 └── README.md
 ```
 
-> **Nota:** `www/` é uma cópia gerada pelo Capacitor a partir de `frontend/` — sempre edite os arquivos em `frontend/` e rode `npx cap sync android` para propagar a mudança pro app mobile.
+> **Nota:** `www/` é a pasta que o Capacitor empacota de fato no app Android — mas o `npx cap sync` **não** copia `frontend/` para `www/` sozinho, ele só propaga o conteúdo de `www/` pro projeto nativo. Depois de editar algo em `frontend/`, copie manualmente os arquivos alterados para `www/` (ex: `Copy-Item frontend\index.html, frontend\script.js, frontend\accessibility.js www\ -Force` no PowerShell) e só então rode `npx cap sync android`.
 
 ## ▶️ Como rodar localmente
 

@@ -19,17 +19,6 @@ const API_BASE_URL =
     : "";
 
 let currentUser = null;
-
-// Converte um Blob (o PDF recebido do backend) para base64, formato que o
-// plugin Filesystem do Capacitor exige para gravar arquivos binários.
-function blobParaBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result.split(",")[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
 let currentResumeId = null;
 let isSavingToCloud = false;
 let isLoadingResume = false;
@@ -69,6 +58,8 @@ async function checarSessao() {
     // fluxo normal de login.
     if (event === "PASSWORD_RECOVERY") {
       limparTokenDaURL();
+      const campoUsername = document.getElementById("new-password-username");
+      if (campoUsername) campoUsername.value = session?.user?.email || "";
       new bootstrap.Modal(document.getElementById("newPasswordModal")).show();
       return;
     }
@@ -100,8 +91,7 @@ function atualizarUIAuth(user) {
     bannerLogin.style.setProperty("display", "flex", "important");
     bannerLogged.style.setProperty("display", "none", "important");
     emailDisplay.textContent = "";
-    clearTimeout(timeoutSalvar);
-    timeoutSalvar = null;
+    debouncerSalvamento.cancelar();
     currentResumeId = null;
     document.getElementById("resumesList").innerHTML = "";
     document.getElementById("current-resume-title").textContent =
@@ -158,7 +148,7 @@ async function fazerLogin() {
 // Esquema de URL customizado que o Android/iOS usa pra "devolver" o
 // controle ao app depois do login OAuth (configurado no AndroidManifest.xml
 // e, futuramente, no Info.plist do iOS).
-const OAUTH_CALLBACK_URL = "com.alexnascimento.careeros://auth-callback";
+const OAUTH_CALLBACK_URL = "com.alexnascimento.curricula://auth-callback";
 
 async function loginComGoogle() {
   const isNative = window.Capacitor && window.Capacitor.isNativePlatform();
@@ -414,79 +404,44 @@ document.getElementById("phone").addEventListener("input", function (e) {
   e.target.value = v;
 });
 
-// Se a pessoa colar a URL completa (o normal ao copiar do navegador), tira
-// o https://www. automaticamente — o backend já monta esse prefixo sozinho,
-// então mantê-lo aqui faria o link final sair duplicado e quebrado.
-function limparUrlPerfil(valor) {
-  return valor.replace(/^https?:\/\//i, "").replace(/^www\./i, "");
-}
-
+// limparUrlPerfil, formatarDataMesAno e toggleDataFim vêm de utils.js
+// (carregado antes deste arquivo em index.html) — extraídas de lá para
+// poderem ser testadas isoladamente.
 ["linkedin", "github"].forEach((id) => {
   document.getElementById(id).addEventListener("blur", function () {
     this.value = limparUrlPerfil(this.value.trim());
   });
 });
 
-function formatarDataMesAno(v) {
-  if (!v) return "";
-  const p = v.split("-");
-  return p.length === 2 ? `${p[1]}/${p[0]}` : v;
-}
-
-function toggleDataFim(checkbox) {
-  const input = checkbox.closest(".row").querySelector(".input-data-fim");
-  if (checkbox.checked) {
-    input.disabled = true;
-    input.removeAttribute("required");
-    input.value = "";
-  } else {
-    input.disabled = false;
-    // Só volta a ser obrigatório se a seção (Experiência/Formação) também
-    // estiver marcada para entrar no PDF — sem isso, desmarcar "Incluir no
-    // PDF?" e depois mexer nessa caixinha reativava a obrigatoriedade à
-    // revelia do toggle da seção.
-    const secaoId = checkbox.closest("#experiencias-container")
-      ? "include-experience"
-      : checkbox.closest("#formacao-container")
-        ? "include-education"
-        : null;
-    const secaoIncluida = secaoId
-      ? document.getElementById(secaoId).checked
-      : true;
-    if (secaoIncluida) {
-      input.setAttribute("required", "required");
-    }
-  }
-}
-
 // --- INJEÇÃO DE HTML ---
 function adicionarExperiencia() {
   const isReq = document.getElementById("include-experience").checked
     ? "required"
     : "";
+  const n = expCount;
   const html = `
-    <div class="card mb-3 exp-block shadow-sm border-start border-primary border-4 fade-in" id="exp-${expCount}">
+    <div class="card mb-3 exp-block shadow-sm border-start border-primary border-4 fade-in" id="exp-${n}">
       <div class="card-body bg-white rounded">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0 text-primary fw-bold"><i class="fas fa-building me-2"></i>Nova Experiência</h6>
-          <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="removerElemento('exp-${expCount}')"><i class="fas fa-trash-alt"></i> Remover</button>
+          <h3 class="mb-0 text-primary fw-bold h6"><i class="fas fa-building me-2" aria-hidden="true"></i>Nova Experiência</h3>
+          <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="removerElemento('exp-${n}')" aria-label="Remover esta experiência"><i class="fas fa-trash-alt" aria-hidden="true"></i> Remover</button>
         </div>
         <div class="row mb-2">
-          <div class="col-md-6"><label class="form-label fw-bold text-muted small">Empresa</label><input type="text" class="form-control exp-company" ${isReq}></div>
-          <div class="col-md-6"><label class="form-label fw-bold text-muted small">Cargo</label><input type="text" class="form-control exp-position-pt" ${isReq}></div>
+          <div class="col-md-6"><label class="form-label fw-bold text-muted small" for="exp-company-${n}">Empresa</label><input type="text" id="exp-company-${n}" class="form-control exp-company" ${isReq}></div>
+          <div class="col-md-6"><label class="form-label fw-bold text-muted small" for="exp-position-${n}">Cargo</label><input type="text" id="exp-position-${n}" class="form-control exp-position-pt" ${isReq}></div>
         </div>
         <div class="row mb-3">
-          <div class="col-md-6"><label class="form-label fw-bold text-muted small">Mês/Ano Início</label><input type="month" class="form-control exp-start" ${isReq}></div>
+          <div class="col-md-6"><label class="form-label fw-bold text-muted small" for="exp-start-${n}">Mês/Ano Início</label><input type="month" id="exp-start-${n}" class="form-control exp-start" ${isReq}></div>
           <div class="col-md-6">
-            <label class="form-label fw-bold text-muted small">Mês/Ano Fim</label>
-            <input type="month" class="form-control exp-end input-data-fim" ${isReq}>
+            <label class="form-label fw-bold text-muted small" for="exp-end-${n}">Mês/Ano Fim</label>
+            <input type="month" id="exp-end-${n}" class="form-control exp-end input-data-fim" ${isReq}>
             <div class="form-check mt-2">
-              <input class="form-check-input exp-current" type="checkbox" onchange="toggleDataFim(this)" id="chk-exp-${expCount}">
-              <label class="form-check-label text-primary fw-bold small" for="chk-exp-${expCount}">Trabalho aqui atualmente</label>
+              <input class="form-check-input exp-current" type="checkbox" onchange="toggleDataFim(this)" id="chk-exp-${n}">
+              <label class="form-check-label text-primary fw-bold small" for="chk-exp-${n}">Trabalho aqui atualmente</label>
             </div>
           </div>
         </div>
-        <div class="mb-2"><label class="form-label fw-bold text-muted small">Atividades (separe por ";")</label><textarea class="form-control exp-highlights-pt" rows="3" ${isReq}></textarea></div>
+        <div class="mb-2"><label class="form-label fw-bold text-muted small" for="exp-highlights-${n}">Atividades (separe por ";")</label><textarea id="exp-highlights-${n}" class="form-control exp-highlights-pt" rows="3" ${isReq}></textarea></div>
       </div>
     </div>`;
   document
@@ -499,28 +454,29 @@ function adicionarFormacao() {
   const isReq = document.getElementById("include-education").checked
     ? "required"
     : "";
+  const n = eduCount;
   const html = `
-    <div class="card mb-3 edu-block shadow-sm border-start border-info border-4 fade-in" id="edu-${eduCount}">
+    <div class="card mb-3 edu-block shadow-sm border-start border-info border-4 fade-in" id="edu-${n}">
       <div class="card-body bg-white rounded">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0 text-info fw-bold"><i class="fas fa-university me-2"></i>Nova Formação</h6>
-          <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="removerElemento('edu-${eduCount}')"><i class="fas fa-trash-alt"></i> Remover</button>
+          <h3 class="mb-0 text-info fw-bold h6"><i class="fas fa-university me-2" aria-hidden="true"></i>Nova Formação</h3>
+          <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="removerElemento('edu-${n}')" aria-label="Remover esta formação"><i class="fas fa-trash-alt" aria-hidden="true"></i> Remover</button>
         </div>
         <div class="row mb-2">
-          <div class="col-md-6"><label class="form-label fw-bold text-muted small">Instituição</label><input type="text" class="form-control edu-institution" ${isReq}></div>
-          <div class="col-md-6"><label class="form-label fw-bold text-muted small">Curso</label><input type="text" class="form-control edu-area-pt" ${isReq}></div>
+          <div class="col-md-6"><label class="form-label fw-bold text-muted small" for="edu-institution-${n}">Instituição</label><input type="text" id="edu-institution-${n}" class="form-control edu-institution" ${isReq}></div>
+          <div class="col-md-6"><label class="form-label fw-bold text-muted small" for="edu-area-${n}">Curso</label><input type="text" id="edu-area-${n}" class="form-control edu-area-pt" ${isReq}></div>
         </div>
         <div class="row mb-2">
-          <div class="col-md-4"><label class="form-label fw-bold text-muted small">Mês/Ano Início</label><input type="month" class="form-control edu-start" ${isReq}></div>
+          <div class="col-md-4"><label class="form-label fw-bold text-muted small" for="edu-start-${n}">Mês/Ano Início</label><input type="month" id="edu-start-${n}" class="form-control edu-start" ${isReq}></div>
           <div class="col-md-4">
-            <label class="form-label fw-bold text-muted small">Mês/Ano Término</label>
-            <input type="month" class="form-control edu-end input-data-fim" ${isReq}>
+            <label class="form-label fw-bold text-muted small" for="edu-end-${n}">Mês/Ano Término</label>
+            <input type="month" id="edu-end-${n}" class="form-control edu-end input-data-fim" ${isReq}>
             <div class="form-check mt-2">
-              <input class="form-check-input edu-current" type="checkbox" onchange="toggleDataFim(this)" id="chk-edu-${eduCount}">
-              <label class="form-check-label text-info fw-bold small" for="chk-edu-${eduCount}">Cursando atualmente</label>
+              <input class="form-check-input edu-current" type="checkbox" onchange="toggleDataFim(this)" id="chk-edu-${n}">
+              <label class="form-check-label text-info fw-bold small" for="chk-edu-${n}">Cursando atualmente</label>
             </div>
           </div>
-          <div class="col-md-4"><label class="form-label fw-bold text-muted small">Status</label><input type="text" class="form-control edu-status" ${isReq}></div>
+          <div class="col-md-4"><label class="form-label fw-bold text-muted small" for="edu-status-${n}">Status</label><input type="text" id="edu-status-${n}" class="form-control edu-status" ${isReq}></div>
         </div>
       </div>
     </div>`;
@@ -534,17 +490,18 @@ function adicionarCurso() {
   const isReq = document.getElementById("include-courses").checked
     ? "required"
     : "";
+  const n = cursoCount;
   const html = `
-    <div class="card mb-3 curso-block shadow-sm border-start border-success border-4 fade-in" id="curso-${cursoCount}">
+    <div class="card mb-3 curso-block shadow-sm border-start border-success border-4 fade-in" id="curso-${n}">
       <div class="card-body bg-white rounded">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0 text-success fw-bold"><i class="fas fa-award me-2"></i>Novo Curso</h6>
-          <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="removerElemento('curso-${cursoCount}')"><i class="fas fa-trash-alt"></i> Remover</button>
+          <h3 class="mb-0 text-success fw-bold h6"><i class="fas fa-award me-2" aria-hidden="true"></i>Novo Curso</h3>
+          <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="removerElemento('curso-${n}')" aria-label="Remover este curso"><i class="fas fa-trash-alt" aria-hidden="true"></i> Remover</button>
         </div>
         <div class="row mb-2">
-          <div class="col-md-5"><label class="form-label fw-bold text-muted small">Nome do Curso</label><input type="text" class="form-control curso-name" ${isReq}></div>
-          <div class="col-md-5"><label class="form-label fw-bold text-muted small">Instituição</label><input type="text" class="form-control curso-inst" ${isReq}></div>
-          <div class="col-md-2"><label class="form-label fw-bold text-muted small">Ano</label><input type="number" class="form-control curso-year" value="2024" ${isReq}></div>
+          <div class="col-md-5"><label class="form-label fw-bold text-muted small" for="curso-name-${n}">Nome do Curso</label><input type="text" id="curso-name-${n}" class="form-control curso-name" ${isReq}></div>
+          <div class="col-md-5"><label class="form-label fw-bold text-muted small" for="curso-inst-${n}">Instituição</label><input type="text" id="curso-inst-${n}" class="form-control curso-inst" ${isReq}></div>
+          <div class="col-md-2"><label class="form-label fw-bold text-muted small" for="curso-year-${n}">Ano</label><input type="number" id="curso-year-${n}" class="form-control curso-year" value="2024" ${isReq}></div>
         </div>
       </div>
     </div>`;
@@ -558,19 +515,20 @@ function adicionarProjeto() {
   const isReq = document.getElementById("include-projects").checked
     ? "required"
     : "";
+  const n = projCount;
   const html = `
-    <div class="card mb-3 proj-block shadow-sm border-start border-warning border-4 fade-in" id="proj-${projCount}">
+    <div class="card mb-3 proj-block shadow-sm border-start border-warning border-4 fade-in" id="proj-${n}">
       <div class="card-body bg-white rounded">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <h6 class="mb-0 text-warning fw-bold"><i class="fas fa-code-branch me-2"></i>Novo Projeto</h6>
-          <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="removerElemento('proj-${projCount}')"><i class="fas fa-trash-alt"></i> Remover</button>
+          <h3 class="mb-0 text-warning fw-bold h6"><i class="fas fa-code-branch me-2" aria-hidden="true"></i>Novo Projeto</h3>
+          <button type="button" class="btn btn-outline-danger btn-sm rounded-pill" onclick="removerElemento('proj-${n}')" aria-label="Remover este projeto"><i class="fas fa-trash-alt" aria-hidden="true"></i> Remover</button>
         </div>
         <div class="row mb-2">
-          <div class="col-md-4"><label class="form-label fw-bold text-muted small">Nome</label><input type="text" class="form-control proj-name" ${isReq}></div>
-          <div class="col-md-4"><label class="form-label fw-bold text-muted small">Tecnologias</label><input type="text" class="form-control proj-tech" ${isReq}></div>
-          <div class="col-md-4"><label class="form-label fw-bold text-muted small">Link</label><input type="text" class="form-control proj-link" ${isReq} pattern="${linkPattern}"></div>
+          <div class="col-md-4"><label class="form-label fw-bold text-muted small" for="proj-name-${n}">Nome</label><input type="text" id="proj-name-${n}" class="form-control proj-name" ${isReq}></div>
+          <div class="col-md-4"><label class="form-label fw-bold text-muted small" for="proj-tech-${n}">Tecnologias</label><input type="text" id="proj-tech-${n}" class="form-control proj-tech" ${isReq}></div>
+          <div class="col-md-4"><label class="form-label fw-bold text-muted small" for="proj-link-${n}">Link</label><input type="text" id="proj-link-${n}" class="form-control proj-link" ${isReq} pattern="${linkPattern}"></div>
         </div>
-        <div class="mb-2"><label class="form-label fw-bold text-muted small">Descrição</label><textarea class="form-control proj-desc-pt" rows="2" ${isReq}></textarea></div>
+        <div class="mb-2"><label class="form-label fw-bold text-muted small" for="proj-desc-${n}">Descrição</label><textarea id="proj-desc-${n}" class="form-control proj-desc-pt" rows="2" ${isReq}></textarea></div>
       </div>
     </div>`;
   document
@@ -590,89 +548,35 @@ function removerElemento(id) {
   }
 }
 
-document
-  .getElementById("include-experience")
-  .addEventListener("change", function () {
-    const isChecked = this.checked;
-    document
-      .querySelectorAll(
-        "#experiencias-container input:not([type=checkbox]), #experiencias-container textarea",
-      )
-      .forEach((i) =>
-        isChecked
-          ? i.setAttribute("required", "required")
-          : i.removeAttribute("required"),
-      );
+// aplicarObrigatoriedade (utils.js) liga/desliga "required" nos campos de
+// texto/data da seção, sem nunca mexer nas caixinhas de checkbox — extraída
+// pra cá justamente porque essa distinção já foi um bug real no passado.
+[
+  ["include-experience", "experiencias-container"],
+  ["include-education", "formacao-container"],
+  ["include-courses", "cursos-container"],
+  ["include-projects", "projetos-container"],
+].forEach(([toggleId, containerId]) => {
+  document.getElementById(toggleId).addEventListener("change", function () {
+    aplicarObrigatoriedade(document.getElementById(containerId), this.checked);
   });
-
-document
-  .getElementById("include-education")
-  .addEventListener("change", function () {
-    const isChecked = this.checked;
-    document
-      .querySelectorAll(
-        "#formacao-container input:not([type=checkbox]), #formacao-container textarea",
-      )
-      .forEach((i) =>
-        isChecked
-          ? i.setAttribute("required", "required")
-          : i.removeAttribute("required"),
-      );
-  });
-
-document
-  .getElementById("include-courses")
-  .addEventListener("change", function () {
-    const isChecked = this.checked;
-    document
-      .querySelectorAll(
-        "#cursos-container input:not([type=checkbox]), #cursos-container textarea",
-      )
-      .forEach((i) =>
-        isChecked
-          ? i.setAttribute("required", "required")
-          : i.removeAttribute("required"),
-      );
-  });
-
-document
-  .getElementById("include-projects")
-  .addEventListener("change", function () {
-    const isChecked = this.checked;
-    document
-      .querySelectorAll(
-        "#projetos-container input:not([type=checkbox]), #projetos-container textarea",
-      )
-      .forEach((i) =>
-        isChecked
-          ? i.setAttribute("required", "required")
-          : i.removeAttribute("required"),
-      );
-  });
+});
 
 // ==========================================
 // PERSISTÊNCIA NA NUVEM
 // ==========================================
-let timeoutSalvar;
+// criarDebouncer (utils.js): agrupa edições rápidas numa só chamada de
+// salvamento, mas permite forçar o salvamento imediato antes de trocar de
+// currículo (flush) — ver comentário original desse bug em utils.js.
+const debouncerSalvamento = criarDebouncer(() => salvarDadosNuvem(), 1500);
+
 function agendarSalvamentoNuvem() {
   if (!currentUser) return;
-  clearTimeout(timeoutSalvar);
-  timeoutSalvar = setTimeout(salvarDadosNuvem, 1500);
+  debouncerSalvamento.agendar();
 }
 
-// Se houver uma edição aguardando o debounce de 1.5s, salva IMEDIATAMENTE
-// no currículo que ainda está ativo (chame isso antes de trocar de
-// currículo). Sem isso, o timer antigo dispararia depois da troca e
-// salvaria os dados errados (ou incompletos) por cima do novo currículo
-// selecionado, já que salvarDadosNuvem() sempre usa o currentResumeId
-// no momento em que ele efetivamente roda, não no momento em que foi
-// agendado.
 async function flushSalvamentoPendente() {
-  if (timeoutSalvar) {
-    clearTimeout(timeoutSalvar);
-    timeoutSalvar = null;
-    await salvarDadosNuvem();
-  }
+  await debouncerSalvamento.flush();
 }
 
 async function salvarDadosNuvem() {
@@ -826,13 +730,23 @@ async function carregarListaCurriculos(userId) {
     const item = document.createElement("div");
     item.className = "resume-item" + (isActive ? " active" : "");
 
-    const info = document.createElement("div");
-    info.style.cursor = "pointer";
+    const nomeTexto = r.resume_name || "Sem nome";
+
+    // Elemento clicável real (button), não uma div — assim funciona
+    // nativamente com Tab, Enter/Espaço e leitores de tela.
+    const info = document.createElement("button");
+    info.type = "button";
+    info.className = "btn btn-link text-start p-0 text-decoration-none text-reset";
     info.style.flex = "1";
+    info.setAttribute(
+      "aria-label",
+      (isActive ? "Currículo atual selecionado: " : "Selecionar currículo: ") +
+        nomeTexto,
+    );
     info.addEventListener("click", () => selecionarCurriculo(r.id));
 
     const nomeEl = document.createElement("div");
-    nomeEl.textContent = r.resume_name || "Sem nome";
+    nomeEl.textContent = nomeTexto;
     if (isActive) {
       const badge = document.createElement("span");
       badge.className = "badge-current";
@@ -853,8 +767,9 @@ async function carregarListaCurriculos(userId) {
     const btnRenomear = document.createElement("button");
     btnRenomear.type = "button";
     btnRenomear.className = "btn btn-sm btn-outline-secondary me-1";
-    btnRenomear.innerHTML = "<i class=\"fas fa-pen\"></i>";
+    btnRenomear.innerHTML = "<i class=\"fas fa-pen\" aria-hidden=\"true\"></i>";
     btnRenomear.title = "Renomear";
+    btnRenomear.setAttribute("aria-label", "Renomear currículo: " + nomeTexto);
     btnRenomear.addEventListener("click", (e) => {
       e.stopPropagation();
       abrirModalRenomear(r.id, r.resume_name || "");
@@ -863,8 +778,9 @@ async function carregarListaCurriculos(userId) {
     const btnExcluir = document.createElement("button");
     btnExcluir.type = "button";
     btnExcluir.className = "btn btn-sm btn-outline-danger";
-    btnExcluir.innerHTML = "<i class=\"fas fa-trash-alt\"></i>";
+    btnExcluir.innerHTML = "<i class=\"fas fa-trash-alt\" aria-hidden=\"true\"></i>";
     btnExcluir.title = "Excluir";
+    btnExcluir.setAttribute("aria-label", "Excluir currículo: " + nomeTexto);
     btnExcluir.addEventListener("click", (e) => {
       e.stopPropagation();
       excluirCurriculo(r.id);
@@ -908,8 +824,7 @@ async function excluirCurriculo(id) {
   if (id === currentResumeId) {
     // Cancela qualquer autosave pendente sem salvar: não faz sentido gravar
     // dados num currículo que acabamos de excluir.
-    clearTimeout(timeoutSalvar);
-    timeoutSalvar = null;
+    debouncerSalvamento.cancelar();
 
     // Precisa de outro currículo pra assumir a edição (ou criar um novo se
     // esse era o único que o usuário tinha).
@@ -1149,7 +1064,7 @@ function mostrarNotificacao(m, t = "info") {
   if (!c) return;
   const a = document.createElement("div");
   a.className = `alert alert-${t} alert-dismissible fade show`;
-  a.innerHTML = `${m}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
+  a.innerHTML = `${m}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar notificação"></button>`;
   c.appendChild(a);
   setTimeout(() => a.remove(), 5000);
 }
@@ -1181,7 +1096,8 @@ document
     }
     const b = document.getElementById("btn-gerar");
     const h = b.innerHTML;
-    b.innerHTML = "<i class=\"fas fa-spinner fa-spin me-2\"></i> Gerando...";
+    b.innerHTML =
+      "<i class=\"fas fa-spinner fa-spin me-2\" aria-hidden=\"true\"></i> Gerando...";
     b.disabled = true;
     await salvarDadosNuvem();
     const p = {

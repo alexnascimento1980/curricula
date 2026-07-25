@@ -88,15 +88,8 @@
       }
 
       /* Tipografia editorial nos títulos */
-      h1,
-      h2,
-      h3,
-      h4,
-      h5,
-      h6,
-      .modal-title,
-      #resumeModalTitle,
-      #current-resume-title {
+      h1, h2, h3, h4, h5, h6,
+      .modal-title, #resumeModalTitle, #current-resume-title {
         font-family: "Source Serif 4", serif;
       }
 
@@ -106,7 +99,7 @@
         border-bottom: 3px solid var(--ink);
         padding: 2rem 2.5rem 1.25rem !important;
       }
-      .masthead h3 {
+      .masthead h1 {
         color: var(--ink);
         font-weight: 700;
         letter-spacing: -0.5px;
@@ -174,51 +167,19 @@
       /* Cores categóricas dos blocos dinâmicos (Experiência/Formação/
          Cursos/Projetos), trocando o azul/ciano/verde/amarelo padrão do
          Bootstrap por tons compatíveis com a paleta editorial. */
-      .border-primary {
-        border-color: var(--navy) !important;
-      }
-      .border-info {
-        border-color: #4a6670 !important;
-      }
-      .border-success {
-        border-color: #5c6e3c !important;
-      }
-      .border-warning {
-        border-color: #a87c1f !important;
-      }
-      .text-info {
-        color: #4a6670 !important;
-      }
-      .text-success {
-        color: #5c6e3c !important;
-      }
-      .text-warning {
-        color: #a87c1f !important;
-      }
-      .btn-outline-info {
-        color: #4a6670 !important;
-        border-color: #4a6670 !important;
-      }
-      .btn-outline-info:hover {
-        background-color: #4a6670 !important;
-        color: var(--paper) !important;
-      }
-      .btn-outline-success {
-        color: #5c6e3c !important;
-        border-color: #5c6e3c !important;
-      }
-      .btn-outline-success:hover {
-        background-color: #5c6e3c !important;
-        color: var(--paper) !important;
-      }
-      .btn-outline-warning {
-        color: #a87c1f !important;
-        border-color: #a87c1f !important;
-      }
-      .btn-outline-warning:hover {
-        background-color: #a87c1f !important;
-        color: var(--paper) !important;
-      }
+      .border-primary { border-color: var(--navy) !important; }
+      .border-info { border-color: #4a6670 !important; }
+      .border-success { border-color: #5c6e3c !important; }
+      .border-warning { border-color: #a87c1f !important; }
+      .text-info { color: #4a6670 !important; }
+      .text-success { color: #5c6e3c !important; }
+      .text-warning { color: #a87c1f !important; }
+      .btn-outline-info { color: #4a6670 !important; border-color: #4a6670 !important; }
+      .btn-outline-info:hover { background-color: #4a6670 !important; color: var(--paper) !important; }
+      .btn-outline-success { color: #5c6e3c !important; border-color: #5c6e3c !important; }
+      .btn-outline-success:hover { background-color: #5c6e3c !important; color: var(--paper) !important; }
+      .btn-outline-warning { color: #a87c1f !important; border-color: #a87c1f !important; }
+      .btn-outline-warning:hover { background-color: #a87c1f !important; color: var(--paper) !important; }
 
       /* FEEDBACK VISUAL */
       @keyframes pulse-save {
@@ -296,25 +257,263 @@
         background-color: #4a5a2f !important;
         border-color: #4a5a2f !important;
       }
+
+      /* ============================================================
+         ACESSIBILIDADE
+         ============================================================ */
+
+      /* Link "pular para o conteúdo": some visualmente até receber foco */
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: 0;
+        z-index: 2000;
+        background: var(--navy);
+        color: #fff !important;
+        padding: 10px 18px;
+        border-radius: 0 0 6px 0;
+        font-weight: 700;
+        text-decoration: none;
+      }
+      .skip-link:focus {
+        left: 0;
+      }
+
+      /* Foco visível reforçado em toda a aplicação (além do padrão do
+         Bootstrap), inclusive em elementos que viram "botão" via JS. */
+      a:focus-visible,
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible,
+      [tabindex]:focus-visible,
+      .resume-item:focus-visible {
+        outline: 3px solid #d98c00 !important;
+        outline-offset: 2px !important;
+      }
+
+      /* Respeita a preferência do sistema por menos movimento */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      /* Classe aplicada via toolbar de acessibilidade: desliga animações
+         mesmo em sistemas sem a preferência ativada no SO. */
+      html.a11y-reduce-motion *,
+      html.a11y-reduce-motion *::before,
+      html.a11y-reduce-motion *::after {
+        animation: none !important;
+        transition: none !important;
+      }
+
+      /* Fonte ajustável: a toolbar altera este valor no elemento <html>,
+         e como o restante do layout usa rem, tudo escala em conjunto. */
+      html {
+        font-size: 100%;
+      }
+      html.a11y-font-md { font-size: 112%; }
+      html.a11y-font-lg { font-size: 125%; }
+
+      /* Modo alto contraste: paleta com contraste bem acima do mínimo
+         AA, fundo sólido e bordas mais marcadas. */
+      html.a11y-high-contrast body {
+        --ink: #000000;
+        --ink-soft: #000000;
+        --paper: #ffffff;
+        --paper-line: #000000;
+        --navy: #002a52;
+        --navy-dark: #001830;
+        --navy-tint: #d8e6f5;
+      }
+      html.a11y-high-contrast .card,
+      html.a11y-high-contrast .form-control,
+      html.a11y-high-contrast .form-select {
+        border: 2px solid #000 !important;
+      }
+      html.a11y-high-contrast .masthead {
+        border-bottom-width: 4px;
+      }
+      html.a11y-high-contrast .btn-outline-info,
+      html.a11y-high-contrast .btn-outline-success,
+      html.a11y-high-contrast .btn-outline-warning,
+      html.a11y-high-contrast .btn-outline-primary {
+        color: #000 !important;
+        border-color: #000 !important;
+      }
+
+      /* Barra flutuante de opções de acessibilidade */
+      #a11y-toggle-btn {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        z-index: 1200;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: var(--navy);
+        color: #fff;
+        border: none;
+        font-size: 1.3rem;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+      }
+      #a11y-toggle-btn:hover {
+        background: var(--navy-dark);
+      }
+      #a11y-panel {
+        position: fixed;
+        bottom: 82px;
+        left: 20px;
+        z-index: 1200;
+        width: 280px;
+        background: #fff;
+        border: 1px solid var(--paper-line);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+        padding: 16px;
+        display: none;
+      }
+      #a11y-panel.open {
+        display: block;
+      }
+      #a11y-panel h2 {
+        font-size: 1rem !important;
+        font-family: "Inter", sans-serif !important;
+        margin-bottom: 12px;
+      }
+      #a11y-panel .a11y-row {
+        margin-bottom: 14px;
+      }
+      #a11y-panel .a11y-row:last-child {
+        margin-bottom: 0;
+      }
+      #a11y-panel label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+      }
+      #a11y-font-group {
+        display: flex;
+        gap: 6px;
+      }
+      #a11y-font-group button {
+        flex: 1;
+        border: 1px solid var(--navy);
+        background: #fff;
+        color: var(--navy);
+        border-radius: 6px;
+        padding: 4px 0;
+        font-weight: 700;
+      }
+      #a11y-font-group button[aria-pressed="true"],
+      #a11y-panel .form-check-input:checked {
+        background-color: var(--navy);
+        border-color: var(--navy);
+      }
+      #a11y-font-group button[aria-pressed="true"] {
+        color: #fff;
+      }
+
+      /* Utilitário para texto apenas para leitores de tela */
+      .visually-hidden-focusable:not(:focus):not(:focus-within) {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+      }
     </style>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Pular para o conteúdo principal</a>
+
+    <!-- Opções de Acessibilidade -->
+    <button
+      type="button"
+      id="a11y-toggle-btn"
+      aria-expanded="false"
+      aria-controls="a11y-panel"
+      aria-label="Abrir opções de acessibilidade"
+    >
+      <i class="fas fa-universal-access" aria-hidden="true"></i>
+    </button>
+    <div id="a11y-panel" role="region" aria-label="Opções de acessibilidade">
+      <h2>Acessibilidade</h2>
+      <div class="a11y-row">
+        <label id="a11y-font-label">Tamanho da fonte</label>
+        <div
+          id="a11y-font-group"
+          role="group"
+          aria-labelledby="a11y-font-label"
+        >
+          <button type="button" data-font-size="normal" aria-pressed="true">
+            A<span class="visually-hidden-focusable"> normal</span>
+          </button>
+          <button type="button" data-font-size="md" aria-pressed="false">
+            A+<span class="visually-hidden-focusable"> médio</span>
+          </button>
+          <button type="button" data-font-size="lg" aria-pressed="false">
+            A++<span class="visually-hidden-focusable"> grande</span>
+          </button>
+        </div>
+      </div>
+      <div class="a11y-row form-check form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="a11y-high-contrast"
+        />
+        <label class="form-check-label" for="a11y-high-contrast"
+          >Alto contraste</label
+        >
+      </div>
+      <div class="a11y-row form-check form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          id="a11y-reduce-motion"
+        />
+        <label class="form-check-label" for="a11y-reduce-motion"
+          >Reduzir movimento/animações</label
+        >
+      </div>
+    </div>
+
     <!-- Modal de Nomeação -->
-    <div class="modal fade" id="resumeModal" tabindex="-1" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="resumeModal"
+      tabindex="-1"
+      aria-hidden="true"
+      aria-labelledby="resumeModalTitle"
+    >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-gradient-primary text-white">
             <h5 class="modal-title fw-bold">
-              <i class="fas fa-file-alt me-2"></i><span id="resumeModalTitle">Novo Currículo</span>
+              <i class="fas fa-file-alt me-2"></i
+              ><span id="resumeModalTitle">Novo Currículo</span>
             </h5>
             <button
               type="button"
               class="btn-close btn-close-white"
+              aria-label="Fechar modal"
               data-bs-dismiss="modal"
             ></button>
           </div>
           <div class="modal-body p-4">
-            <label class="form-label fw-bold">Nome do Currículo</label>
+            <label class="form-label fw-bold" for="resumeNameInput">Nome do Currículo</label>
             <input
               type="text"
               class="form-control"
@@ -324,46 +523,74 @@
             />
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
               Cancelar
             </button>
-            <button type="button" class="btn btn-primary" id="saveResumeNameBtn">Salvar</button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="saveResumeNameBtn"
+            >
+              Salvar
+            </button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- Painel Lateral -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="resumePanel">
+    <div
+      class="offcanvas offcanvas-end"
+      tabindex="-1"
+      id="resumePanel"
+      aria-labelledby="resumePanelTitle"
+    >
       <div class="offcanvas-header bg-gradient-primary text-white">
-        <h5 class="offcanvas-title fw-bold">
-          <i class="fas fa-folder-open me-2"></i> Meus Currículos
+        <h5 class="offcanvas-title fw-bold" id="resumePanelTitle">
+          <i class="fas fa-folder-open me-2" aria-hidden="true"></i> Meus Currículos
         </h5>
         <button
           type="button"
           class="btn-close btn-close-white"
+          aria-label="Fechar painel"
           data-bs-dismiss="offcanvas"
         ></button>
       </div>
       <div class="offcanvas-body p-0">
         <div class="list-group list-group-flush" id="resumesList"></div>
         <div class="p-3 border-top">
-          <button class="btn btn-primary w-100" onclick="abrirModalNovoCurriculo()">
-            <i class="fas fa-plus me-2"></i> Criar Novo
+          <button
+            class="btn btn-primary w-100"
+            onclick="abrirModalNovoCurriculo()"
+          >
+            <i class="fas fa-plus me-2" aria-hidden="true"></i> Criar Novo
           </button>
         </div>
       </div>
     </div>
 
     <!-- Auth Modal -->
-    <div class="modal fade" id="authModal" tabindex="-1" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="authModal"
+      tabindex="-1"
+      aria-hidden="true"
+      aria-labelledby="authModalTitle"
+    >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-gradient-primary text-white">
-            <h5 class="modal-title fw-bold"><i class="fas fa-lock me-2"></i> Área do Candidato</h5>
+            <h5 class="modal-title fw-bold" id="authModalTitle">
+              <i class="fas fa-lock me-2" aria-hidden="true"></i> Área do Candidato
+            </h5>
             <button
               type="button"
               class="btn-close btn-close-white"
+              aria-label="Fechar modal"
               data-bs-dismiss="modal"
             ></button>
           </div>
@@ -376,7 +603,7 @@
               "
             >
               <div class="mb-3">
-                <label class="form-label fw-bold">E-mail</label
+                <label class="form-label fw-bold" for="auth-email">E-mail</label
                 ><input
                   type="email"
                   class="form-control"
@@ -386,7 +613,7 @@
                 />
               </div>
               <div class="mb-4">
-                <label class="form-label fw-bold">Senha</label
+                <label class="form-label fw-bold" for="auth-password">Senha</label
                 ><input
                   type="password"
                   class="form-control"
@@ -399,9 +626,13 @@
                 id="auth-error"
                 class="text-danger small mb-3 fw-bold"
                 style="display: none"
+                aria-live="assertive"
+                role="alert"
               ></div>
               <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary" id="btn-login">Entrar</button>
+                <button type="submit" class="btn btn-primary" id="btn-login">
+                  Entrar
+                </button>
                 <button
                   type="button"
                   class="btn btn-outline-secondary"
@@ -410,8 +641,12 @@
                 >
                   Criar Conta
                 </button>
-                <button type="button" class="btn btn-outline-danger" onclick="loginComGoogle()">
-                  <i class="fab fa-google me-2"></i> Google
+                <button
+                  type="button"
+                  class="btn btn-outline-danger"
+                  onclick="loginComGoogle()"
+                >
+                  <i class="fab fa-google me-2" aria-hidden="true"></i> Google
                 </button>
               </div>
               <div class="text-center mt-3">
@@ -431,20 +666,30 @@
       </div>
     </div>
 
-    <div class="modal fade" id="resetPasswordModal" tabindex="-1" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="resetPasswordModal"
+      tabindex="-1"
+      aria-hidden="true"
+      aria-labelledby="resetPasswordModalTitle"
+    >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-gradient-primary text-white">
-            <h5 class="modal-title fw-bold"><i class="fas fa-key me-2"></i> Recuperar Senha</h5>
+            <h5 class="modal-title fw-bold" id="resetPasswordModalTitle">
+              <i class="fas fa-key me-2" aria-hidden="true"></i> Recuperar Senha
+            </h5>
             <button
               type="button"
               class="btn-close btn-close-white"
+              aria-label="Fechar modal"
               data-bs-dismiss="modal"
             ></button>
           </div>
           <div class="modal-body p-4">
             <p class="small text-muted">
-              Digite o e-mail da sua conta. Vamos enviar um link pra você definir uma nova senha.
+              Digite o e-mail da sua conta. Vamos enviar um link pra você
+              definir uma nova senha.
             </p>
             <form
               id="resetPasswordForm"
@@ -454,7 +699,7 @@
               "
             >
               <div class="mb-3">
-                <label class="form-label fw-bold">E-mail</label
+                <label class="form-label fw-bold" for="reset-email">E-mail</label
                 ><input
                   type="email"
                   class="form-control"
@@ -467,9 +712,15 @@
                 id="reset-error"
                 class="text-danger small mb-3 fw-bold"
                 style="display: none"
+                aria-live="assertive"
+                role="alert"
               ></div>
               <div class="d-grid">
-                <button type="submit" class="btn btn-primary" id="btn-send-reset">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  id="btn-send-reset"
+                >
                   Enviar link de recuperação
                 </button>
               </div>
@@ -484,17 +735,21 @@
       id="newPasswordModal"
       tabindex="-1"
       aria-hidden="true"
+      aria-labelledby="newPasswordModalTitle"
       data-bs-backdrop="static"
       data-bs-keyboard="false"
     >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-gradient-primary text-white">
-            <h5 class="modal-title fw-bold"><i class="fas fa-key me-2"></i> Definir Nova Senha</h5>
+            <h5 class="modal-title fw-bold" id="newPasswordModalTitle">
+              <i class="fas fa-key me-2" aria-hidden="true"></i> Definir Nova Senha
+            </h5>
           </div>
           <div class="modal-body p-4">
             <p class="small text-muted">
-              Você clicou num link de recuperação de senha. Escolha uma nova senha pra continuar.
+              Você clicou num link de recuperação de senha. Escolha uma nova
+              senha pra continuar.
             </p>
             <form
               id="newPasswordForm"
@@ -503,8 +758,22 @@
                 salvarNovaSenha();
               "
             >
+              <!-- Campo oculto exigido pelas boas práticas de acessibilidade
+                   de formulários de senha: ajuda gerenciadores de senha e
+                   leitores de tela a associarem a nova senha à conta certa,
+                   mesmo sem um campo de login visível nesta tela. -->
+              <input
+                type="email"
+                id="new-password-username"
+                name="username"
+                autocomplete="username"
+                class="visually-hidden-focusable"
+                tabindex="-1"
+                aria-hidden="true"
+                readonly
+              />
               <div class="mb-3">
-                <label class="form-label fw-bold">Nova senha</label
+                <label class="form-label fw-bold" for="new-password">Nova senha</label
                 ><input
                   type="password"
                   class="form-control"
@@ -514,7 +783,7 @@
                 />
               </div>
               <div class="mb-3">
-                <label class="form-label fw-bold">Confirmar nova senha</label
+                <label class="form-label fw-bold" for="new-password-confirm">Confirmar nova senha</label
                 ><input
                   type="password"
                   class="form-control"
@@ -527,9 +796,15 @@
                 id="new-password-error"
                 class="text-danger small mb-3 fw-bold"
                 style="display: none"
+                aria-live="assertive"
+                role="alert"
               ></div>
               <div class="d-grid">
-                <button type="submit" class="btn btn-primary" id="btn-save-new-password">
+                <button
+                  type="submit"
+                  class="btn btn-primary"
+                  id="btn-save-new-password"
+                >
                   Salvar nova senha
                 </button>
               </div>
@@ -543,18 +818,23 @@
       id="notificacoes-container"
       class="position-fixed top-0 end-0 p-3"
       style="z-index: 1100"
+      aria-live="assertive"
+      role="alert"
     ></div>
     <div
       id="save-status-indicator"
       class="position-fixed bottom-0 end-0 p-3"
       style="z-index: 1000; display: none"
+      aria-live="polite"
+      role="status"
     >
       <div class="badge bg-info p-2 shadow">
-        <i class="fas fa-cloud-upload-alt me-2"></i><span id="save-status-text">Salvando...</span>
+        <i class="fas fa-cloud-upload-alt me-2"></i
+        ><span id="save-status-text">Salvando...</span>
       </div>
     </div>
 
-    <div class="container mt-4 mb-5 fade-in">
+    <main id="main-content" class="container mt-4 mb-5 fade-in">
       <div class="row justify-content-center mb-3">
         <div class="col-md-10">
           <div
@@ -562,8 +842,9 @@
             id="login-banner"
           >
             <div>
-              <i class="fas fa-info-circle me-2"></i><strong>Atenção:</strong> Faça login para
-              gerenciar múltiplos currículos.
+              <i class="fas fa-info-circle me-2"></i
+              ><strong>Atenção:</strong> Faça login para gerenciar múltiplos
+              currículos.
             </div>
             <button
               class="btn btn-sm btn-dark fw-bold px-4"
@@ -580,10 +861,13 @@
             style="display: none !important"
           >
             <div class="d-flex align-items-center">
-              <i class="fas fa-check-circle me-2"></i>
+              <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
               <div>
-                <strong>Logado!</strong> (<span id="user-email-display" class="fw-bold"></span>)
-                Editando:
+                <strong>Logado!</strong> (<span
+                  id="user-email-display"
+                  class="fw-bold"
+                ></span
+                >) Editando:
                 <span id="current-resume-title" class="fw-bold text-primary"
                   >Nenhum selecionado</span
                 >
@@ -595,9 +879,14 @@
                 data-bs-toggle="offcanvas"
                 data-bs-target="#resumePanel"
               >
-                <i class="fas fa-list me-1"></i> Meus Currículos
+                <i class="fas fa-list me-1" aria-hidden="true"></i> Meus Currículos
               </button>
-              <button class="btn btn-sm btn-outline-danger" onclick="fazerLogout()">Sair</button>
+              <button
+                class="btn btn-sm btn-outline-danger"
+                onclick="fazerLogout()"
+              >
+                Sair
+              </button>
             </div>
           </div>
         </div>
@@ -607,50 +896,72 @@
         <div class="col-md-10">
           <div class="card shadow-lg">
             <div class="card-header masthead">
-              <h3 class="mb-0 fw-bold">Currícula</h3>
+              <h1 class="mb-0 fw-bold">Currícula</h1>
               <p class="mb-0">Gerador de Currículo ATS Bilíngue Inteligente</p>
             </div>
             <div class="card-body p-4 p-md-5">
               <form id="cv-form" novalidate>
                 <!-- DADOS BÁSICOS -->
-                <h5 class="border-bottom pb-2 mb-4 text-primary section-title">
+                <h2 class="border-bottom pb-2 mb-4 text-primary section-title">
                   <span class="section-num">01</span> Dados Básicos
-                </h5>
+                </h2>
                 <div class="row mb-3">
                   <div class="col-md-6">
-                    <label class="form-label fw-bold">Nome Completo</label
-                    ><input type="text" class="form-control" id="name" required />
+                    <label class="form-label fw-bold" for="name">Nome Completo</label
+                    ><input
+                      type="text"
+                      class="form-control"
+                      id="name"
+                      required
+                    />
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label fw-bold">Título Profissional</label
-                    ><input type="text" class="form-control" id="label_pt" required />
+                    <label class="form-label fw-bold" for="label_pt">Título Profissional</label
+                    ><input
+                      type="text"
+                      class="form-control"
+                      id="label_pt"
+                      required
+                    />
                   </div>
                 </div>
                 <div class="row mb-3">
                   <div class="col-md-6">
-                    <label class="form-label fw-bold">E-mail</label
-                    ><input type="email" class="form-control" id="email" required />
+                    <label class="form-label fw-bold" for="email">E-mail</label
+                    ><input
+                      type="email"
+                      class="form-control"
+                      id="email"
+                      required
+                    />
                   </div>
                   <div class="col-md-6">
-                    <label class="form-label fw-bold">Telefone</label
-                    ><input type="tel" class="form-control" id="phone" required />
+                    <label class="form-label fw-bold" for="phone">Telefone</label
+                    ><input
+                      type="tel"
+                      class="form-control"
+                      id="phone"
+                      required
+                    />
                   </div>
                 </div>
                 <div class="row mb-4">
                   <div class="col-md-3">
-                    <label class="form-label fw-bold">Estado</label
+                    <label class="form-label fw-bold" for="estado">Estado</label
                     ><select class="form-select" id="estado" required>
                       <option value="" disabled selected>Carregando...</option>
                     </select>
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label fw-bold">Cidade</label
+                    <label class="form-label fw-bold" for="cidade">Cidade</label
                     ><select class="form-select" id="cidade" required disabled>
-                      <option value="" disabled selected>Selecione o estado</option>
+                      <option value="" disabled selected>
+                        Selecione o estado
+                      </option>
                     </select>
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label fw-bold">LinkedIn</label
+                    <label class="form-label fw-bold" for="linkedin">LinkedIn</label
                     ><input
                       type="text"
                       class="form-control"
@@ -660,7 +971,7 @@
                     />
                   </div>
                   <div class="col-md-3">
-                    <label class="form-label fw-bold">GitHub</label
+                    <label class="form-label fw-bold" for="github">GitHub</label
                     ><input
                       type="text"
                       class="form-control"
@@ -672,20 +983,27 @@
                 </div>
 
                 <!-- RESUMO -->
-                <h5 class="border-bottom pb-2 mb-4 text-primary section-title mt-5">
+                <h2
+                  class="border-bottom pb-2 mb-4 text-primary section-title mt-5"
+                >
                   <span class="section-num">02</span> Resumo Profissional
-                </h5>
+                </h2>
                 <div class="mb-4">
-                  <textarea class="form-control" id="summary_pt" rows="4" required></textarea>
+                  <textarea
+                    class="form-control"
+                    id="summary_pt"
+                    rows="4"
+                    required
+                  ></textarea>
                 </div>
 
                 <!-- EXPERIÊNCIA -->
                 <div
                   class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4 mt-5"
                 >
-                  <h5 class="mb-0 text-primary section-title">
+                  <h2 class="mb-0 text-primary section-title">
                     <span class="section-num">03</span> Experiência Profissional
-                  </h5>
+                  </h2>
                   <div class="form-check form-switch fs-5">
                     <input
                       class="form-check-input"
@@ -703,16 +1021,16 @@
                   class="btn btn-outline-primary btn-add mb-4"
                   onclick="adicionarExperiencia()"
                 >
-                  <i class="fas fa-plus"></i> Adicionar Experiência
+                  <i class="fas fa-plus" aria-hidden="true"></i> Adicionar Experiência
                 </button>
 
                 <!-- FORMAÇÃO -->
                 <div
                   class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4 mt-5"
                 >
-                  <h5 class="mb-0 text-primary section-title">
+                  <h2 class="mb-0 text-primary section-title">
                     <span class="section-num">04</span> Formação Acadêmica
-                  </h5>
+                  </h2>
                   <div class="form-check form-switch fs-5">
                     <input
                       class="form-check-input"
@@ -730,23 +1048,25 @@
                   class="btn btn-outline-info btn-add mb-4"
                   onclick="adicionarFormacao()"
                 >
-                  <i class="fas fa-plus"></i> Adicionar Formação
+                  <i class="fas fa-plus" aria-hidden="true"></i> Adicionar Formação
                 </button>
 
                 <!-- CURSOS -->
                 <div
                   class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4 mt-5"
                 >
-                  <h5 class="mb-0 text-primary section-title">
+                  <h2 class="mb-0 text-primary section-title">
                     <span class="section-num">05</span> Cursos Complementares
-                  </h5>
+                  </h2>
                   <div class="form-check form-switch fs-5">
                     <input
                       class="form-check-input"
                       type="checkbox"
                       id="include-courses"
                       checked
-                    /><label class="form-check-label" for="include-courses">Incluir no PDF?</label>
+                    /><label class="form-check-label" for="include-courses"
+                      >Incluir no PDF?</label
+                    >
                   </div>
                 </div>
                 <div id="cursos-container"></div>
@@ -755,23 +1075,25 @@
                   class="btn btn-outline-success btn-add mb-4"
                   onclick="adicionarCurso()"
                 >
-                  <i class="fas fa-plus"></i> Adicionar Curso
+                  <i class="fas fa-plus" aria-hidden="true"></i> Adicionar Curso
                 </button>
 
                 <!-- PROJETOS -->
                 <div
                   class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4 mt-5"
                 >
-                  <h5 class="mb-0 text-primary section-title">
+                  <h2 class="mb-0 text-primary section-title">
                     <span class="section-num">06</span> Projetos Técnicos
-                  </h5>
+                  </h2>
                   <div class="form-check form-switch fs-5">
                     <input
                       class="form-check-input"
                       type="checkbox"
                       id="include-projects"
                       checked
-                    /><label class="form-check-label" for="include-projects">Incluir no PDF?</label>
+                    /><label class="form-check-label" for="include-projects"
+                      >Incluir no PDF?</label
+                    >
                   </div>
                 </div>
                 <div id="projetos-container"></div>
@@ -780,13 +1102,15 @@
                   class="btn btn-outline-warning btn-add mb-4"
                   onclick="adicionarProjeto()"
                 >
-                  <i class="fas fa-plus"></i> Adicionar Projeto
+                  <i class="fas fa-plus" aria-hidden="true"></i> Adicionar Projeto
                 </button>
 
                 <!-- HABILIDADES -->
-                <h5 class="border-bottom pb-2 mb-4 text-primary section-title mt-5">
+                <h2
+                  class="border-bottom pb-2 mb-4 text-primary section-title mt-5"
+                >
                   <span class="section-num">07</span> Habilidades e Ferramentas
-                </h5>
+                </h2>
                 <div class="mb-4">
                   <input
                     type="text"
@@ -801,8 +1125,11 @@
                 <div class="export-box p-4 rounded-3 border mt-5 mb-4">
                   <div class="row align-items-center">
                     <div class="col-md-8">
-                      <label class="form-label fw-bold">Idioma de Saída:</label
-                      ><select class="form-select form-select-lg" id="idioma_escolhido">
+                      <label class="form-label fw-bold" for="idioma_escolhido">Idioma de Saída:</label
+                      ><select
+                        class="form-select form-select-lg"
+                        id="idioma_escolhido"
+                      >
                         <option value="pt" selected>🇧🇷 Português</option>
                         <option value="en">🇺🇸 Inglês</option>
                       </select>
@@ -813,7 +1140,7 @@
                         class="btn btn-generate btn-lg rounded-pill"
                         id="btn-gerar"
                       >
-                        <i class="fas fa-file-pdf me-2"></i> Gerar Currículo
+                        <i class="fas fa-file-pdf me-2" aria-hidden="true"></i> Gerar Currículo
                       </button>
                     </div>
                   </div>
@@ -823,8 +1150,10 @@
           </div>
         </div>
       </div>
-    </div>
+    </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="utils.js"></script>
     <script src="script.js"></script>
+    <script src="accessibility.js"></script>
   </body>
 </html>
