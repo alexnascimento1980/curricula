@@ -5,19 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Currícula - Gerador de Currículo ATS Bilíngue</title>
 
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link href="vendor/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="vendor/fontawesome/all.min.css" />
     <link
       href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="vendor/supabase/supabase.js"></script>
 
     <style>
       :root {
@@ -88,8 +82,15 @@
       }
 
       /* Tipografia editorial nos títulos */
-      h1, h2, h3, h4, h5, h6,
-      .modal-title, #resumeModalTitle, #current-resume-title {
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      .modal-title,
+      #resumeModalTitle,
+      #current-resume-title {
         font-family: "Source Serif 4", serif;
       }
 
@@ -167,19 +168,51 @@
       /* Cores categóricas dos blocos dinâmicos (Experiência/Formação/
          Cursos/Projetos), trocando o azul/ciano/verde/amarelo padrão do
          Bootstrap por tons compatíveis com a paleta editorial. */
-      .border-primary { border-color: var(--navy) !important; }
-      .border-info { border-color: #4a6670 !important; }
-      .border-success { border-color: #5c6e3c !important; }
-      .border-warning { border-color: #a87c1f !important; }
-      .text-info { color: #4a6670 !important; }
-      .text-success { color: #5c6e3c !important; }
-      .text-warning { color: #a87c1f !important; }
-      .btn-outline-info { color: #4a6670 !important; border-color: #4a6670 !important; }
-      .btn-outline-info:hover { background-color: #4a6670 !important; color: var(--paper) !important; }
-      .btn-outline-success { color: #5c6e3c !important; border-color: #5c6e3c !important; }
-      .btn-outline-success:hover { background-color: #5c6e3c !important; color: var(--paper) !important; }
-      .btn-outline-warning { color: #a87c1f !important; border-color: #a87c1f !important; }
-      .btn-outline-warning:hover { background-color: #a87c1f !important; color: var(--paper) !important; }
+      .border-primary {
+        border-color: var(--navy) !important;
+      }
+      .border-info {
+        border-color: #4a6670 !important;
+      }
+      .border-success {
+        border-color: #5c6e3c !important;
+      }
+      .border-warning {
+        border-color: #a87c1f !important;
+      }
+      .text-info {
+        color: #4a6670 !important;
+      }
+      .text-success {
+        color: #5c6e3c !important;
+      }
+      .text-warning {
+        color: #a87c1f !important;
+      }
+      .btn-outline-info {
+        color: #4a6670 !important;
+        border-color: #4a6670 !important;
+      }
+      .btn-outline-info:hover {
+        background-color: #4a6670 !important;
+        color: var(--paper) !important;
+      }
+      .btn-outline-success {
+        color: #5c6e3c !important;
+        border-color: #5c6e3c !important;
+      }
+      .btn-outline-success:hover {
+        background-color: #5c6e3c !important;
+        color: var(--paper) !important;
+      }
+      .btn-outline-warning {
+        color: #a87c1f !important;
+        border-color: #a87c1f !important;
+      }
+      .btn-outline-warning:hover {
+        background-color: #a87c1f !important;
+        color: var(--paper) !important;
+      }
 
       /* FEEDBACK VISUAL */
       @keyframes pulse-save {
@@ -318,8 +351,12 @@
       html {
         font-size: 100%;
       }
-      html.a11y-font-md { font-size: 112%; }
-      html.a11y-font-lg { font-size: 125%; }
+      html.a11y-font-md {
+        font-size: 112%;
+      }
+      html.a11y-font-lg {
+        font-size: 125%;
+      }
 
       /* Modo alto contraste: paleta com contraste bem acima do mínimo
          AA, fundo sólido e bordas mais marcadas. */
@@ -452,11 +489,7 @@
       <h2>Acessibilidade</h2>
       <div class="a11y-row">
         <label id="a11y-font-label">Tamanho da fonte</label>
-        <div
-          id="a11y-font-group"
-          role="group"
-          aria-labelledby="a11y-font-label"
-        >
+        <div id="a11y-font-group" role="group" aria-labelledby="a11y-font-label">
           <button type="button" data-font-size="normal" aria-pressed="true">
             A<span class="visually-hidden-focusable"> normal</span>
           </button>
@@ -469,24 +502,12 @@
         </div>
       </div>
       <div class="a11y-row form-check form-switch">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          id="a11y-high-contrast"
-        />
-        <label class="form-check-label" for="a11y-high-contrast"
-          >Alto contraste</label
-        >
+        <input class="form-check-input" type="checkbox" id="a11y-high-contrast" />
+        <label class="form-check-label" for="a11y-high-contrast">Alto contraste</label>
       </div>
       <div class="a11y-row form-check form-switch">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          id="a11y-reduce-motion"
-        />
-        <label class="form-check-label" for="a11y-reduce-motion"
-          >Reduzir movimento/animações</label
-        >
+        <input class="form-check-input" type="checkbox" id="a11y-reduce-motion" />
+        <label class="form-check-label" for="a11y-reduce-motion">Reduzir movimento/animações</label>
       </div>
     </div>
 
@@ -502,8 +523,7 @@
         <div class="modal-content">
           <div class="modal-header bg-gradient-primary text-white">
             <h5 class="modal-title fw-bold">
-              <i class="fas fa-file-alt me-2"></i
-              ><span id="resumeModalTitle">Novo Currículo</span>
+              <i class="fas fa-file-alt me-2"></i><span id="resumeModalTitle">Novo Currículo</span>
             </h5>
             <button
               type="button"
@@ -523,20 +543,10 @@
             />
           </div>
           <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-secondary"
-              data-bs-dismiss="modal"
-            >
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
               Cancelar
             </button>
-            <button
-              type="button"
-              class="btn btn-primary"
-              id="saveResumeNameBtn"
-            >
-              Salvar
-            </button>
+            <button type="button" class="btn btn-primary" id="saveResumeNameBtn">Salvar</button>
           </div>
         </div>
       </div>
@@ -563,10 +573,7 @@
       <div class="offcanvas-body p-0">
         <div class="list-group list-group-flush" id="resumesList"></div>
         <div class="p-3 border-top">
-          <button
-            class="btn btn-primary w-100"
-            onclick="abrirModalNovoCurriculo()"
-          >
+          <button class="btn btn-primary w-100" onclick="abrirModalNovoCurriculo()">
             <i class="fas fa-plus me-2" aria-hidden="true"></i> Criar Novo
           </button>
         </div>
@@ -630,9 +637,7 @@
                 role="alert"
               ></div>
               <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary" id="btn-login">
-                  Entrar
-                </button>
+                <button type="submit" class="btn btn-primary" id="btn-login">Entrar</button>
                 <button
                   type="button"
                   class="btn btn-outline-secondary"
@@ -641,11 +646,7 @@
                 >
                   Criar Conta
                 </button>
-                <button
-                  type="button"
-                  class="btn btn-outline-danger"
-                  onclick="loginComGoogle()"
-                >
+                <button type="button" class="btn btn-outline-danger" onclick="loginComGoogle()">
                   <i class="fab fa-google me-2" aria-hidden="true"></i> Google
                 </button>
               </div>
@@ -688,8 +689,7 @@
           </div>
           <div class="modal-body p-4">
             <p class="small text-muted">
-              Digite o e-mail da sua conta. Vamos enviar um link pra você
-              definir uma nova senha.
+              Digite o e-mail da sua conta. Vamos enviar um link pra você definir uma nova senha.
             </p>
             <form
               id="resetPasswordForm"
@@ -716,11 +716,7 @@
                 role="alert"
               ></div>
               <div class="d-grid">
-                <button
-                  type="submit"
-                  class="btn btn-primary"
-                  id="btn-send-reset"
-                >
+                <button type="submit" class="btn btn-primary" id="btn-send-reset">
                   Enviar link de recuperação
                 </button>
               </div>
@@ -748,8 +744,7 @@
           </div>
           <div class="modal-body p-4">
             <p class="small text-muted">
-              Você clicou num link de recuperação de senha. Escolha uma nova
-              senha pra continuar.
+              Você clicou num link de recuperação de senha. Escolha uma nova senha pra continuar.
             </p>
             <form
               id="newPasswordForm"
@@ -783,7 +778,8 @@
                 />
               </div>
               <div class="mb-3">
-                <label class="form-label fw-bold" for="new-password-confirm">Confirmar nova senha</label
+                <label class="form-label fw-bold" for="new-password-confirm"
+                  >Confirmar nova senha</label
                 ><input
                   type="password"
                   class="form-control"
@@ -800,11 +796,7 @@
                 role="alert"
               ></div>
               <div class="d-grid">
-                <button
-                  type="submit"
-                  class="btn btn-primary"
-                  id="btn-save-new-password"
-                >
+                <button type="submit" class="btn btn-primary" id="btn-save-new-password">
                   Salvar nova senha
                 </button>
               </div>
@@ -829,8 +821,7 @@
       role="status"
     >
       <div class="badge bg-info p-2 shadow">
-        <i class="fas fa-cloud-upload-alt me-2"></i
-        ><span id="save-status-text">Salvando...</span>
+        <i class="fas fa-cloud-upload-alt me-2"></i><span id="save-status-text">Salvando...</span>
       </div>
     </div>
 
@@ -842,9 +833,8 @@
             id="login-banner"
           >
             <div>
-              <i class="fas fa-info-circle me-2"></i
-              ><strong>Atenção:</strong> Faça login para gerenciar múltiplos
-              currículos.
+              <i class="fas fa-info-circle me-2"></i><strong>Atenção:</strong> Faça login para
+              gerenciar múltiplos currículos.
             </div>
             <button
               class="btn btn-sm btn-dark fw-bold px-4"
@@ -863,11 +853,8 @@
             <div class="d-flex align-items-center">
               <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
               <div>
-                <strong>Logado!</strong> (<span
-                  id="user-email-display"
-                  class="fw-bold"
-                ></span
-                >) Editando:
+                <strong>Logado!</strong> (<span id="user-email-display" class="fw-bold"></span>)
+                Editando:
                 <span id="current-resume-title" class="fw-bold text-primary"
                   >Nenhum selecionado</span
                 >
@@ -881,12 +868,7 @@
               >
                 <i class="fas fa-list me-1" aria-hidden="true"></i> Meus Currículos
               </button>
-              <button
-                class="btn btn-sm btn-outline-danger"
-                onclick="fazerLogout()"
-              >
-                Sair
-              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="fazerLogout()">Sair</button>
             </div>
           </div>
         </div>
@@ -908,41 +890,21 @@
                 <div class="row mb-3">
                   <div class="col-md-6">
                     <label class="form-label fw-bold" for="name">Nome Completo</label
-                    ><input
-                      type="text"
-                      class="form-control"
-                      id="name"
-                      required
-                    />
+                    ><input type="text" class="form-control" id="name" required />
                   </div>
                   <div class="col-md-6">
                     <label class="form-label fw-bold" for="label_pt">Título Profissional</label
-                    ><input
-                      type="text"
-                      class="form-control"
-                      id="label_pt"
-                      required
-                    />
+                    ><input type="text" class="form-control" id="label_pt" required />
                   </div>
                 </div>
                 <div class="row mb-3">
                   <div class="col-md-6">
                     <label class="form-label fw-bold" for="email">E-mail</label
-                    ><input
-                      type="email"
-                      class="form-control"
-                      id="email"
-                      required
-                    />
+                    ><input type="email" class="form-control" id="email" required />
                   </div>
                   <div class="col-md-6">
                     <label class="form-label fw-bold" for="phone">Telefone</label
-                    ><input
-                      type="tel"
-                      class="form-control"
-                      id="phone"
-                      required
-                    />
+                    ><input type="tel" class="form-control" id="phone" required />
                   </div>
                 </div>
                 <div class="row mb-4">
@@ -955,9 +917,7 @@
                   <div class="col-md-3">
                     <label class="form-label fw-bold" for="cidade">Cidade</label
                     ><select class="form-select" id="cidade" required disabled>
-                      <option value="" disabled selected>
-                        Selecione o estado
-                      </option>
+                      <option value="" disabled selected>Selecione o estado</option>
                     </select>
                   </div>
                   <div class="col-md-3">
@@ -983,18 +943,11 @@
                 </div>
 
                 <!-- RESUMO -->
-                <h2
-                  class="border-bottom pb-2 mb-4 text-primary section-title mt-5"
-                >
+                <h2 class="border-bottom pb-2 mb-4 text-primary section-title mt-5">
                   <span class="section-num">02</span> Resumo Profissional
                 </h2>
                 <div class="mb-4">
-                  <textarea
-                    class="form-control"
-                    id="summary_pt"
-                    rows="4"
-                    required
-                  ></textarea>
+                  <textarea class="form-control" id="summary_pt" rows="4" required></textarea>
                 </div>
 
                 <!-- EXPERIÊNCIA -->
@@ -1064,9 +1017,7 @@
                       type="checkbox"
                       id="include-courses"
                       checked
-                    /><label class="form-check-label" for="include-courses"
-                      >Incluir no PDF?</label
-                    >
+                    /><label class="form-check-label" for="include-courses">Incluir no PDF?</label>
                   </div>
                 </div>
                 <div id="cursos-container"></div>
@@ -1091,9 +1042,7 @@
                       type="checkbox"
                       id="include-projects"
                       checked
-                    /><label class="form-check-label" for="include-projects"
-                      >Incluir no PDF?</label
-                    >
+                    /><label class="form-check-label" for="include-projects">Incluir no PDF?</label>
                   </div>
                 </div>
                 <div id="projetos-container"></div>
@@ -1106,9 +1055,7 @@
                 </button>
 
                 <!-- HABILIDADES -->
-                <h2
-                  class="border-bottom pb-2 mb-4 text-primary section-title mt-5"
-                >
+                <h2 class="border-bottom pb-2 mb-4 text-primary section-title mt-5">
                   <span class="section-num">07</span> Habilidades e Ferramentas
                 </h2>
                 <div class="mb-4">
@@ -1125,11 +1072,9 @@
                 <div class="export-box p-4 rounded-3 border mt-5 mb-4">
                   <div class="row align-items-center">
                     <div class="col-md-8">
-                      <label class="form-label fw-bold" for="idioma_escolhido">Idioma de Saída:</label
-                      ><select
-                        class="form-select form-select-lg"
-                        id="idioma_escolhido"
-                      >
+                      <label class="form-label fw-bold" for="idioma_escolhido"
+                        >Idioma de Saída:</label
+                      ><select class="form-select form-select-lg" id="idioma_escolhido">
                         <option value="pt" selected>🇧🇷 Português</option>
                         <option value="en">🇺🇸 Inglês</option>
                       </select>
@@ -1151,7 +1096,7 @@
         </div>
       </div>
     </main>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="utils.js"></script>
     <script src="script.js"></script>
     <script src="accessibility.js"></script>

@@ -1,5 +1,10 @@
 export default [
   {
+    // Bibliotecas de terceiros empacotadas localmente (bootstrap,
+    // supabase-js) — não é código nosso, não faz sentido lintar.
+    ignores: ["frontend/vendor/**"]
+  },
+  {
     files: ["**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",

@@ -94,20 +94,21 @@ def adicionar_cabecalhos_seguranca(response):
     # isso enfraquece um pouco a proteção contra XSS baseado em script
     # inline, mas ainda bloqueia carregar script/estilo de qualquer domínio
     # de terceiros não listado aqui, que é o vetor mais comum.
+    #
+    # Bootstrap, Font Awesome e supabase-js são servidos localmente (ver
+    # frontend/vendor/) em vez de vir de CDN — isso não é só uma questão de
+    # CSP, foi o que resolveu o login não funcionar no app Android
+    # empacotado: se o CDN falhasse ao carregar num aparelho real, o
+    # supabaseClient nunca era criado e toda a autenticação quebrava
+    # silenciosamente. Só o Google Fonts continua externo (cosmético —
+    # se falhar, cai pro fallback de fonte do sistema, não quebra nada).
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' "
-        "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-        "style-src 'self' 'unsafe-inline' "
-        "https://cdn.jsdelivr.net https://cdnjs.cloudflare.com "
-        "https://fonts.googleapis.com; "
-        "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data:; "
-        # cdn.jsdelivr.net aqui é só pra permitir que o DevTools baixe os
-        # .map (source maps) do Bootstrap quando aberto; o domínio já é
-        # confiável de qualquer forma via script-src/style-src acima.
-        f"connect-src 'self' {_SUPABASE_URL} https://servicodados.ibge.gov.br "
-        "https://cdn.jsdelivr.net; "
+        f"connect-src 'self' {_SUPABASE_URL} https://servicodados.ibge.gov.br; "
         "frame-ancestors 'none'; "
         "base-uri 'self'; "
         "form-action 'self';"
@@ -134,6 +135,14 @@ def utils_js():
 @app.route("/accessibility.js")
 def accessibility_js():
     return send_from_directory(FRONTEND_DIR, "accessibility.js")
+
+
+@app.route("/vendor/<path:caminho_arquivo>")
+def vendor(caminho_arquivo):
+    # Bibliotecas de terceiros empacotadas localmente (bootstrap, font
+    # awesome, supabase-js) — ver frontend/vendor/. send_from_directory já
+    # bloqueia tentativas de sair da pasta (ex: "../../app.py").
+    return send_from_directory(os.path.join(FRONTEND_DIR, "vendor"), caminho_arquivo)
 
 
 def normalizar_url_perfil(valor):
