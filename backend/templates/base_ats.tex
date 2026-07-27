@@ -15,7 +15,7 @@
 \hypersetup{
     colorlinks=true,
     linkcolor=black,
-    filecolor=black,      
+    filecolor=black,
     urlcolor=blue,
     pdftitle={{ '{' ~ (dados.basics.name | latexmeta) ~ ' - ' ~ ('Currículo' if lang == 'pt' else 'Resume') ~ '}' }},
     pdfauthor={{ '{' ~ (dados.basics.name | latexmeta) ~ '}' }},
@@ -45,8 +45,13 @@
     \textbf{ {{ (dados.basics.label_pt if lang == 'pt' else dados.basics.label_en) | latex }} } \\
     \vspace{1mm}
     \small {{ dados.basics.location | latex }} | {{ dados.basics.phone | latex }} | \href{mailto:{{ dados.basics.email }}}{\texttt{ {{ dados.basics.email | latex }} }} \\
-    % --- ALTERAÇÃO AQUI: Exibindo a URL completa para impressão ---
+    {% if dados.basics.linkedin and dados.basics.github %}
     \small \href{https://{{ dados.basics.linkedin }}}{ {{ dados.basics.linkedin | latex }} } | \href{https://{{ dados.basics.github }}}{ {{ dados.basics.github | latex }} }
+    {% elif dados.basics.linkedin %}
+    \small \href{https://{{ dados.basics.linkedin }}}{ {{ dados.basics.linkedin | latex }} }
+    {% elif dados.basics.github %}
+    \small \href{https://{{ dados.basics.github }}}{ {{ dados.basics.github | latex }} }
+    {% endif %}
 \end{center}
 
 \vspace{2mm}

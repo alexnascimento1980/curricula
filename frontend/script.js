@@ -556,6 +556,8 @@ function removerElemento(id) {
   ["include-education", "formacao-container"],
   ["include-courses", "cursos-container"],
   ["include-projects", "projetos-container"],
+  ["include-linkedin", "linkedin-wrapper"],
+  ["include-github", "github-wrapper"],
 ].forEach(([toggleId, containerId]) => {
   document.getElementById(toggleId).addEventListener("change", function () {
     aplicarObrigatoriedade(document.getElementById(containerId), this.checked);
@@ -609,6 +611,8 @@ async function salvarDadosNuvem() {
         includeEducation: document.getElementById("include-education").checked,
         includeCourses: document.getElementById("include-courses").checked,
         includeProjects: document.getElementById("include-projects").checked,
+        includeLinkedin: document.getElementById("include-linkedin").checked,
+        includeGithub: document.getElementById("include-github").checked,
         idioma: document.getElementById("idioma_escolhido").value,
       },
       experience: Array.from(document.querySelectorAll(".exp-block")).map(
@@ -952,6 +956,23 @@ async function carregarCurriculoPorId(id) {
     document.getElementById("include-projects").checked =
       cfg.includeProjects !== false;
 
+    // Diferente dos blocos acima (recriados do zero mais abaixo, já
+    // respeitando o checkbox), linkedin/github são campos fixos no HTML —
+    // setar .checked por script não dispara "change", então precisamos
+    // aplicar a obrigatoriedade manualmente aqui.
+    const incluirLinkedin = cfg.includeLinkedin !== false;
+    const incluirGithub = cfg.includeGithub !== false;
+    document.getElementById("include-linkedin").checked = incluirLinkedin;
+    document.getElementById("include-github").checked = incluirGithub;
+    aplicarObrigatoriedade(
+      document.getElementById("linkedin-wrapper"),
+      incluirLinkedin,
+    );
+    aplicarObrigatoriedade(
+      document.getElementById("github-wrapper"),
+      incluirGithub,
+    );
+
     if (r.basics?.estado) {
       document.getElementById("estado").value = r.basics.estado;
       await carregarCidades(r.basics.estado);
@@ -1043,6 +1064,18 @@ function limparFormulario() {
   adicionarFormacao();
   adicionarCurso();
   adicionarProjeto();
+  // form.reset() volta os checkboxes ao estado padrão (marcado), mas não
+  // restaura sozinho o "required" de linkedin/github caso tivesse sido
+  // removido antes — como esses campos não são recriados como os blocos
+  // acima, reaplicamos manualmente aqui.
+  aplicarObrigatoriedade(
+    document.getElementById("linkedin-wrapper"),
+    document.getElementById("include-linkedin").checked,
+  );
+  aplicarObrigatoriedade(
+    document.getElementById("github-wrapper"),
+    document.getElementById("include-github").checked,
+  );
 }
 
 function mostrarStatusSalvamento(s = true) {
@@ -1108,8 +1141,12 @@ document
         email: document.getElementById("email").value,
         phone: document.getElementById("phone").value,
         location: `${document.getElementById("cidade").value}, ${document.getElementById("estado").value}`,
-        linkedin: document.getElementById("linkedin").value,
-        github: document.getElementById("github").value,
+        linkedin: document.getElementById("include-linkedin").checked
+          ? document.getElementById("linkedin").value
+          : "",
+        github: document.getElementById("include-github").checked
+          ? document.getElementById("github").value
+          : "",
       },
       summary: { pt: [document.getElementById("summary_pt").value] },
       experience: document.getElementById("include-experience").checked
