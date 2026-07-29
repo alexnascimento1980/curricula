@@ -1,8 +1,6 @@
 import concurrent.futures
 import io
 import os
-import subprocess
-import tempfile
 import time
 
 from deep_translator import GoogleTranslator
@@ -10,8 +8,9 @@ from flask import Flask, jsonify, request, send_file, send_from_directory
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from jinja2 import Environment, FileSystemLoader
-from latex_utils import escapar_latex, escapar_pdfmeta
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from pdf_gerador import gerar_pdf
+from texto_utils import remover_emojis
 
 # Caminhos calculados a partir da localização deste arquivo, não da pasta
 # de onde o comando é executado — assim o app funciona igual rodando
@@ -22,7 +21,7 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
 app = Flask(__name__, static_folder=FRONTEND_DIR)
 
-# Protege contra payloads absurdamente grandes (abuso/DoS via pdflatex).
+# Protege contra payloads absurdamente grandes (abuso/DoS via geração de PDF).
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # 2 MB
 
 # Em produção, defina ALLOWED_ORIGINS (separado por vírgulas) para restringir
@@ -380,70 +379,15 @@ def generate_cv():
             )
 
     try:
-        env = Environment(loader=FileSystemLoader(TEMPLATES_DIR))
-        env.filters["latex"] = escapar_latex
-        env.filters["latexmeta"] = escapar_pdfmeta
-        template = env.get_template("base_ats.tex")
-        rendered_tex = template.render(dados=data, lang=lang)
+        env = Environment(
+            loader=FileSystemLoader(TEMPLATES_DIR),
+            autoescape=select_autoescape(["html"]),
+        )
+        env.filters["limpar"] = remover_emojis
+        template = env.get_template("base_ats.html")
+        html_renderizado = template.render(dados=data, lang=lang)
 
-        pdf_bytes = None
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            tex_path = os.path.join(tmpdir, "curriculo.tex")
-            pdf_path = os.path.join(tmpdir, "curriculo.pdf")
-
-            with open(tex_path, "w", encoding="utf-8") as f:
-                f.write(rendered_tex)
-
-            try:
-                pdflatex_cmd = [
-                    "pdflatex",
-                    "-interaction=nonstopmode",
-                    "-output-directory",
-                    tmpdir,
-                    tex_path,
-                ]
-                # Compila duas vezes: os marcadores de navegação do PDF
-                # (bookmarks), inseridos via \pdfbookmark para acessibilidade,
-                # só ficam corretos depois de uma segunda passada — é assim
-                # que o hyperref resolve as referências entre si.
-                result = subprocess.run(
-                    pdflatex_cmd,
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                    check=False,
-                )
-                if result.returncode == 0:
-                    result = subprocess.run(
-                        pdflatex_cmd,
-                        capture_output=True,
-                        text=True,
-                        timeout=30,
-                        check=False,
-                    )
-            except subprocess.TimeoutExpired:
-                return (
-                    jsonify({"erro": "Tempo limite excedido ao compilar o PDF."}),
-                    504,
-                )
-
-            if result.returncode != 0:
-                return (
-                    jsonify(
-                        {
-                            "erro": "Erro na compilação do LaTeX.",
-                            "detalhes": result.stdout,
-                        }
-                    ),
-                    500,
-                )
-
-            if os.path.exists(pdf_path):
-                with open(pdf_path, "rb") as pf:
-                    pdf_bytes = pf.read()
-            else:
-                return jsonify({"erro": "O arquivo PDF não pôde ser encontrado."}), 500
+        pdf_bytes = gerar_pdf(html_renderizado)
 
         mem_pdf = io.BytesIO(pdf_bytes)
 

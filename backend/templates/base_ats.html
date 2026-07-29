@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="{{ 'pt-BR' if lang == 'pt' else 'en-US' }}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="author" content="{{ dados.basics.name | limpar }}" />
+    <title>{{ dados.basics.name | limpar }} - {{ 'Currículo' if lang == 'pt' else 'Resume' }}</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 1.8cm;
+      }
+
+      body {
+        font-family: "Liberation Serif", Georgia, "Times New Roman", serif;
+        font-size: 10.5pt;
+        line-height: 1.35;
+        color: #111;
+      }
+
+      /* Cabeçalho */
+      .cabecalho {
+        text-align: center;
+        margin-bottom: 10pt;
+      }
+      .cabecalho h1 {
+        font-size: 22pt;
+        margin: 0;
+      }
+      .cabecalho .subtitulo {
+        font-weight: bold;
+        margin: 3pt 0;
+      }
+      .cabecalho .contato {
+        font-size: 9pt;
+        margin: 2pt 0;
+      }
+      .cabecalho a {
+        color: #0645ad;
+        text-decoration: none;
+      }
+
+      /* Seções: título com sublinhado, gera bookmark de navegação no PDF */
+      h2 {
+        font-size: 12.5pt;
+        text-transform: uppercase;
+        border-bottom: 1pt solid #111;
+        padding-bottom: 1pt;
+        margin-top: 12pt;
+        margin-bottom: 4pt;
+        bookmark-level: 1;
+        bookmark-label: content();
+      }
+
+      /* Linha "empresa/instituição -- datas", alinhada nas duas pontas */
+      .linha-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 0;
+      }
+      .linha-item .nome {
+        font-weight: bold;
+      }
+      .linha-item .data {
+        font-weight: bold;
+        white-space: nowrap;
+      }
+      .subtitulo-item {
+        font-style: italic;
+        margin: 0 0 2pt 0;
+      }
+
+      ul {
+        margin: 2pt 0 6pt 0;
+        padding-left: 15pt;
+      }
+      ul li {
+        margin-bottom: 1pt;
+      }
+      ul li::marker {
+        content: "• ";
+      }
+
+      .bloco {
+        margin-bottom: 6pt;
+      }
+
+      p {
+        margin: 0 0 4pt 0;
+      }
+    </style>
+  </head>
+  <body>
+    {% set titulo_resumo = 'Resumo' if lang == 'pt' else 'Summary' %}
+    {% set titulo_experiencia = 'Experiência Profissional' if lang == 'pt' else 'Professional Experience' %}
+    {% set titulo_formacao = 'Formação Acadêmica' if lang == 'pt' else 'Education' %}
+    {% set titulo_cursos = 'Cursos Complementares' if lang == 'pt' else 'Additional Courses' %}
+    {% set titulo_projetos = 'Projetos Técnicos' if lang == 'pt' else 'Technical Projects' %}
+    {% set titulo_habilidades = 'Habilidades' if lang == 'pt' else 'Skills' %}
+
+    <!-- Cabeçalho -->
+    <div class="cabecalho">
+      <h1>{{ dados.basics.name | limpar }}</h1>
+      <p class="subtitulo">
+        {{ (dados.basics.label_pt if lang == 'pt' else dados.basics.label_en) | limpar }}
+      </p>
+      <p class="contato">
+        {{ dados.basics.location | limpar }} | {{ dados.basics.phone | limpar }} |
+        <a
+          href="mailto:{{ dados.basics.email }}"
+          data-alt="{{ 'Enviar e-mail para' if lang == 'pt' else 'Send an email to' }} {{ dados.basics.name | limpar }}"
+          >{{ dados.basics.email | limpar }}</a
+        >
+      </p>
+      {% if dados.basics.linkedin or dados.basics.github %}
+      <p class="contato">
+        {% if dados.basics.linkedin %}
+        <a
+          href="https://{{ dados.basics.linkedin }}"
+          data-alt="{{ 'Perfil no LinkedIn de' if lang == 'pt' else 'LinkedIn profile of' }} {{ dados.basics.name | limpar }}"
+          >{{ dados.basics.linkedin | limpar }}</a
+        >
+        {% endif %} {% if dados.basics.linkedin and dados.basics.github %} | {% endif %}
+        {% if dados.basics.github %}
+        <a
+          href="https://{{ dados.basics.github }}"
+          data-alt="{{ 'Perfil no GitHub de' if lang == 'pt' else 'GitHub profile of' }} {{ dados.basics.name | limpar }}"
+          >{{ dados.basics.github | limpar }}</a
+        >
+        {% endif %}
+      </p>
+      {% endif %}
+    </div>
+
+    <!-- Resumo -->
+    <h2>{{ titulo_resumo }}</h2>
+    {% set resumo = dados.summary.pt if lang == 'pt' else dados.summary.en %} {% for linha in
+    resumo %}
+    <p>{{ linha | limpar }}</p>
+    {% endfor %}
+
+    <!-- Experiência Profissional -->
+    {% if dados.experience and dados.experience|length > 0 %}
+    <h2>{{ titulo_experiencia }}</h2>
+    {% for xp in dados.experience %}
+    <div class="bloco">
+      <div class="linha-item">
+        <span class="nome">{{ xp.company | limpar }}</span>
+        <span class="data">{{ xp.startDate | limpar }} – {{ xp.endDate | limpar }}</span>
+      </div>
+      <p class="subtitulo-item">
+        {{ (xp.position_pt if lang == 'pt' else xp.position_en) | limpar }}
+      </p>
+      {% set destaques = xp.highlights_pt if lang == 'pt' else xp.highlights_en %} {% if
+      destaques and destaques|length > 0 %}
+      <ul>
+        {% for item in destaques %}
+        <li>{{ item | limpar }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endfor %} {% endif %}
+
+    <!-- Formação Acadêmica -->
+    {% if dados.education and dados.education|length > 0 %}
+    <h2>{{ titulo_formacao }}</h2>
+    {% for edu in dados.education %}
+    <div class="bloco">
+      <div class="linha-item">
+        <span class="nome">{{ edu.institution | limpar }}</span>
+        <span class="data">{{ edu.startDate | limpar }} – {{ edu.endDate | limpar }}</span>
+      </div>
+      <p class="subtitulo-item">{{ (edu.area_pt if lang == 'pt' else edu.area_en) | limpar }}</p>
+      <p>Status: {{ (edu.status_pt if lang == 'pt' else edu.status_en) | limpar }}</p>
+    </div>
+    {% endfor %} {% endif %}
+
+    <!-- Cursos Complementares -->
+    {% if dados.courses and dados.courses|length > 0 %}
+    <h2>{{ titulo_cursos }}</h2>
+    {% for curso in dados.courses %}
+    <div class="linha-item">
+      <span class="nome">
+        {{ (curso.name_pt if lang == 'pt' else curso.name_en) | limpar }} |
+        <em>{{ curso.institution | limpar }}</em>
+      </span>
+      <span class="data">{{ curso.year | limpar }}</span>
+    </div>
+    {% endfor %} {% endif %}
+
+    <!-- Projetos Técnicos -->
+    {% if dados.projects and dados.projects|length > 0 %}
+    <h2>{{ titulo_projetos }}</h2>
+    {% for proj in dados.projects %}
+    <div class="bloco">
+      <div class="linha-item">
+        <span class="nome">{{ proj.name | limpar }} | <em>{{ proj.technologies | limpar }}</em></span>
+        <span class="data">
+          <a
+            href="https://{{ proj.link }}"
+            data-alt="{{ 'Link do projeto' if lang == 'pt' else 'Project link' }}: {{ proj.name | limpar }}"
+            >{{ proj.link | limpar }}</a
+          >
+        </span>
+      </div>
+      <ul>
+        <li>{{ (proj.description_pt if lang == 'pt' else proj.description_en) | limpar }}</li>
+      </ul>
+    </div>
+    {% endfor %} {% endif %}
+
+    <!-- Habilidades -->
+    <h2>{{ titulo_habilidades }}</h2>
+    <p>
+      <strong>{{ 'Técnicas' if lang == 'pt' else 'Technical' }}:</strong>
+      {{ (dados.skills.technical if lang == 'pt' else dados.skills.get('technical_en',
+      dados.skills.technical)) | map('limpar') | join(', ') }}
+    </p>
+  </body>
+</html>

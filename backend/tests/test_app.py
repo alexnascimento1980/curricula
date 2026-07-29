@@ -6,14 +6,17 @@ Rodar com: pytest -v
 
 import os
 import sys
+from io import BytesIO
 from unittest.mock import patch
 
+import pikepdf
 import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import app as app_module
-from latex_utils import escapar_latex
+from pdf_gerador import adicionar_alt_text_nos_links, extrair_textos_alt
+from texto_utils import remover_emojis
 
 
 def payload_valido():
@@ -37,9 +40,17 @@ def payload_valido():
 def client():
     """Cliente de teste do Flask, com rate limiting desligado (senão os
     próprios testes rodando em sequência esbarrariam no limite de 10/min
-    pensado para o uso real, não para uma bateria de testes)."""
+    pensado para o uso real, não para uma bateria de testes).
+
+    Também reseta o limiter a cada teste: RATELIMIT_ENABLED=False evita que
+    o limite seja *aplicado*, mas não impede o Flask-Limiter de continuar
+    *contando* as chamadas — sem o reset, testes que chamam /generate-cv
+    várias vezes acabam "vazando" contagem para o teste seguinte que
+    reabilita o rate limiting de propósito.
+    """
     app_module.app.config["TESTING"] = True
     app_module.app.config["RATELIMIT_ENABLED"] = False
+    app_module.limiter.reset()
     with app_module.app.test_client() as c:
         yield c
 
@@ -65,28 +76,61 @@ def test_normalizar_url_perfil(entrada, esperado):
 
 
 # ==========================================
-# escapar_latex
+# remover_emojis
 # ==========================================
-def test_escapar_latex_caracteres_especiais():
-    assert escapar_latex("P&D") == r"P\&D"
-    assert escapar_latex("100%") == r"100\%"
-    assert escapar_latex("C#") == r"C\#"
-    assert escapar_latex("a_b") == r"a\_b"
-    assert escapar_latex("R$ 100") == r"R\$ 100"
-    assert escapar_latex("{chave}") == r"\{chave\}"
+def test_remover_emojis_remove_pictogramas():
+    assert remover_emojis("Python 🐍 Developer") == "Python  Developer"
 
 
-def test_escapar_latex_valores_vazios():
-    assert escapar_latex(None) == ""
-    assert escapar_latex("") == ""
+def test_remover_emojis_texto_sem_emoji_nao_muda():
+    assert remover_emojis("Texto normal 123") == "Texto normal 123"
 
 
-def test_escapar_latex_texto_sem_caracteres_especiais_nao_muda():
-    assert escapar_latex("Texto normal 123") == "Texto normal 123"
+def test_remover_emojis_valores_vazios():
+    assert remover_emojis(None) == ""
+    assert remover_emojis("") == ""
 
 
-def test_escapar_latex_barra_invertida():
-    assert escapar_latex("\\") == r"\textbackslash{}"
+def test_remover_emojis_seletor_de_variacao_e_zwj():
+    # Emojis compostos (ex: 🛠️) usam seletor de variação (U+FE0F) e/ou
+    # zero-width joiner (U+200D) — precisam ser removidos junto, senão
+    # sobra um caractere "órfão" invisível no texto.
+    assert remover_emojis("🛠️ Ferramentas") == " Ferramentas"
+
+
+# ==========================================
+# pdf_gerador: extrair_textos_alt / adicionar_alt_text_nos_links
+#
+# WeasyPrint hoje não propaga aria-label/data-alt do HTML para o /Alt dos
+# elementos /Link na árvore de estrutura do PDF (suporte a atributos ARIA
+# ainda não foi implementado no projeto) — por isso esse pós-processamento
+# manual existe. Sem testar isso, uma futura versão do WeasyPrint que
+# resolva essa lacuna nativamente poderia fazer a gente aplicar o /Alt
+# duas vezes sem ninguém perceber, ou uma regressão poderia silenciosamente
+# parar de aplicar o /Alt sem nenhum teste acusando.
+# ==========================================
+def test_extrair_textos_alt_na_ordem_de_aparicao():
+    html = (
+        '<a href="mailto:x" data-alt="Enviar e-mail">x</a>'
+        '<a href="https://linkedin.com/in/x" data-alt="Perfil no LinkedIn">x</a>'
+    )
+    assert extrair_textos_alt(html) == ["Enviar e-mail", "Perfil no LinkedIn"]
+
+
+def test_extrair_textos_alt_sem_links_retorna_lista_vazia():
+    assert extrair_textos_alt("<p>Sem nenhum link aqui</p>") == []
+
+
+def test_extrair_textos_alt_desfaz_entidades_html_basicas():
+    html = '<a href="x" data-alt="Empresa &amp; Cia &quot;teste&quot;">x</a>'
+    assert extrair_textos_alt(html) == ['Empresa & Cia "teste"']
+
+
+def test_adicionar_alt_text_sem_textos_devolve_pdf_original_sem_abrir():
+    # Não deve nem tentar abrir/reescrever o PDF se não há nada para
+    # aplicar — evita custo (e risco) desnecessário.
+    pdf_bytes_fake = b"isso nao e um PDF de verdade"
+    assert adicionar_alt_text_nos_links(pdf_bytes_fake, []) == pdf_bytes_fake
 
 
 # ==========================================
@@ -223,7 +267,7 @@ def test_validar_dados_cv_courses_item_nao_dict():
 
 
 # ==========================================
-# /generate-cv (integração ponta a ponta, incluindo pdflatex de verdade)
+# /generate-cv (integração ponta a ponta, incluindo WeasyPrint de verdade)
 # ==========================================
 def test_generate_cv_payload_invalido_retorna_400(client):
     resp = client.post("/generate-cv", json={"lang": "pt"})
@@ -236,6 +280,58 @@ def test_generate_cv_pt_gera_pdf_valido(client):
     assert resp.status_code == 200
     assert resp.mimetype == "application/pdf"
     assert resp.data[:4] == b"%PDF"
+
+
+# ==========================================
+# Estrutura PDF/UA (acessibilidade do arquivo gerado)
+#
+# Testes de regressão de propósito específico: garantem que o PDF gerado
+# continua tendo uma árvore de estrutura semântica de verdade (não só texto
+# linear), já que essa foi a motivação inteira de migrar de LaTeX para
+# WeasyPrint. Sem esses testes, uma mudança futura no template ou no
+# pipeline poderia quebrar a acessibilidade do PDF sem nenhum teste
+# reprovando — os testes anteriores só checam "é um PDF válido", não "é um
+# PDF acessível".
+# ==========================================
+def test_generate_cv_pdf_tem_estrutura_marcada_para_leitor_de_tela(client):
+    resp = client.post("/generate-cv", json=payload_valido())
+    pdf = pikepdf.open(BytesIO(resp.data))
+    root = pdf.Root
+    assert root.get("/MarkInfo", {}).get("/Marked") is True
+    assert "/StructTreeRoot" in root
+
+
+def test_generate_cv_pdf_tem_idioma_e_titulo_corretos(client):
+    resp = client.post("/generate-cv", json=payload_valido())
+    pdf = pikepdf.open(BytesIO(resp.data))
+    assert pdf.Root.get("/Lang") == "pt-BR"
+    assert "Fulano de Tal" in str(pdf.docinfo.get("/Title"))
+
+
+def test_generate_cv_pdf_links_tem_texto_alternativo(client):
+    # É a lacuna real que encontramos: sem o pós-processamento do
+    # pdf_gerador.py, os links ficam com /Alt vazio (WeasyPrint não propaga
+    # aria-label/data-alt nativamente hoje).
+    resp = client.post("/generate-cv", json=payload_valido())
+    pdf = pikepdf.open(BytesIO(resp.data))
+
+    links_encontrados = []
+
+    def coletar_links(elem):
+        kids = elem.get("/K")
+        if kids is None:
+            return
+        if not isinstance(kids, pikepdf.Array):
+            kids = [kids]
+        for k in kids:
+            if isinstance(k, pikepdf.Dictionary):
+                if str(k.get("/S")) == "/Link":
+                    links_encontrados.append(k.get("/Alt"))
+                coletar_links(k)
+
+    coletar_links(pdf.Root.StructTreeRoot)
+    assert len(links_encontrados) > 0
+    assert all(alt is not None and str(alt).strip() for alt in links_encontrados)
 
 
 # ==========================================
