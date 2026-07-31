@@ -32,7 +32,7 @@ A aplicação adota uma arquitetura Cliente-Servidor clássica, conteinerizada p
 
 - **Framework:** Python 3.10+ operando com Flask e Gunicorn (WSGI HTTP Server para produção).
 - **Motor de Tradução:** Integração com a biblioteca `deep-translator` para chamadas em tempo real à IA do Google Translate, gerando matrizes bilíngues do documento (Português/Inglês).
-- **Motor de Tipografia:** Uso do sistema **LaTeX** (`pdflatex`) injetado via **Jinja2**. Essa abordagem garante alinhamento matemático perfeito das margens, eliminando tabelas complexas e gerando um binário PDF otimizado para a leitura de robôs de recrutamento.
+- **Motor de Renderização de PDF:** Template em **HTML5/CSS3** injetado via **Jinja2** (autoescape nativo, sem risco de injeção) e convertido para PDF pelo **WeasyPrint**. O documento final é certificado **PDF/UA-1** (ISO 14289-1) — validado formalmente pelo veraPDF, o validador de referência da indústria, com 0 falhas em 106 regras — garantindo que o currículo seja navegável por leitores de tela, não só "bonito visualmente". Um passo de pós-processamento com `pikepdf` complementa a árvore de estrutura com texto alternativo nos links (e-mail, LinkedIn, GitHub, projetos).
 
 ![Diagrama Arquitetural](caminho_para_sua_imagem_2.png)
 _(Figura 2: Fluxo de dados e compilação do documento PDF)_
@@ -42,22 +42,24 @@ _(Figura 2: Fluxo de dados e compilação do documento PDF)_
 ## 3. Funcionalidades de Destaque
 
 1. **Seccionamento Condicional (Toggle):**
-   - Implementação de uma chave seletora que injeta ou remove a obrigatoriedade (DOM `required`) da seção de "Projetos Técnicos". Permite exportar um documento estritamente voltado para gestão ou um documento híbrido voltado para tecnologia.
+   - Cada seção do currículo (Experiência, Formação, Cursos, Projetos) e os campos de LinkedIn/GitHub têm uma chave seletora independente que injeta ou remove a obrigatoriedade (DOM `required`) e decide se aquele conteúdo entra ou não no PDF final. Permite exportar, por exemplo, um documento sem redes sociais para quem não as usa, ou sem a seção de projetos para um perfil mais voltado à gestão.
 2. **Máscaras e Validação (Regex):**
    - Algoritmos de sanitização no Frontend para campos de telefone, datas (conversão de calendário nativo para formato MM/AAAA) e validação de URIs (LinkedIn e GitHub).
 3. **Tradução Silenciosa e Nomenclatura Automática:**
-   - O sistema altera os cabeçalhos fixos no nível do template `.tex` e os textos dinâmicos no nível do payload JSON.
+   - O sistema altera os cabeçalhos fixos no nível do template `.html` e os textos dinâmicos no nível do payload JSON.
    - O binário final é devolvido ao navegador já formatado com o nome do candidato (ex: `Alex_Nascimento_curriculo_en.pdf`).
+4. **Acessibilidade de ponta a ponta:**
+   - Não é só o formulário web que segue WCAG (navegação por teclado, leitores de tela, `aria-live`, barra de opções de fonte/contraste/movimento) — o PDF gerado também é acessível: estrutura semântica real (headings, listas, links), navegável por marcadores de seção, com certificação formal PDF/UA-1.
 
 ---
 
 ## 4. Documentação de Deploy (Render / Docker)
 
-A aplicação foi desenhada com infraestrutura como código (IaC) utilizando Docker, isolando as pesadas dependências do ambiente LaTeX do sistema operacional base.
+A aplicação foi desenhada com infraestrutura como código (IaC) utilizando Docker, isolando as dependências de sistema do WeasyPrint (Pango, HarfBuzz, Fontconfig) do sistema operacional base.
 
 ### 4.1. Estrutura do Container (`Dockerfile`)
 
-O ambiente de produção é construído sobre uma imagem leve (`python:3.10-slim`). Durante o _build_, o gerenciador de pacotes (`apt-get`) instala as dependências mínimas do TeX Live, enquanto o `pip` resolve o ecossistema Python.
+O ambiente de produção é construído sobre uma imagem leve (`python:3.10-slim`, base Debian). Durante o _build_, o gerenciador de pacotes (`apt-get`) instala as bibliotecas de renderização que o WeasyPrint precisa (Pango/HarfBuzz/Fontconfig) e a fonte usada no currículo (Liberation Serif, compatível em métricas com Times New Roman), enquanto o `pip` resolve o ecossistema Python (WeasyPrint, pikepdf, Flask, etc).
 
 ### 4.2. Fluxo de Publicação Contínua no Render
 
@@ -68,7 +70,8 @@ O ambiente de produção está hospedado no Render.com, vinculado diretamente à
 1. Conexão do repositório no dashboard do Render como um **Web Service**.
 2. Definição do Runtime para **Docker**.
 3. Exposição da porta padrão (`5000`) comandada pelo Gunicorn:
-   `CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "app:app"]`
+   `CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "90", "app:app"]`
+   (o timeout de 90s cobre picos em que a requisição envolve tradução via rede + renderização do PDF)
 
 ![Print do painel do Render](caminho_para_sua_imagem_3.png)
 _(Figura 3: Monitoramento de deploy contínuo no ambiente Render)_
@@ -82,7 +85,7 @@ Caso seja necessário depurar a aplicação em ambiente de desenvolvimento isola
 git clone [https://github.com/alexnascimento1980/curricula.git](https://github.com/alexnascimento1980/curricula.git)
 cd curricula
 
-# 2. Construir a imagem (Download do Ubuntu, Python e dependências LaTeX)
+# 2. Construir a imagem (Download do Debian slim, Python e dependências do WeasyPrint)
 docker build -t career-os-local .
 
 # 3. Executar o container realizando o mapeamento de portas
