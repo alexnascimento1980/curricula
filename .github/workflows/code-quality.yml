@@ -34,3 +34,26 @@ jobs:
       - run: npm run lint
 
       - run: npm test
+
+      # frontend-react/ é o novo frontend em migração incremental (React +
+      # TypeScript) — projeto Node independente, com seu próprio
+      # package.json, então cada passo roda com working-directory dedicado.
+      - name: Instalar dependências do frontend-react
+        working-directory: frontend-react
+        run: npm install
+
+      - name: Lint do frontend-react
+        working-directory: frontend-react
+        run: npm run lint
+
+      - name: Typecheck do frontend-react
+        working-directory: frontend-react
+        run: npx tsc -b
+
+      - name: Testes do frontend-react
+        working-directory: frontend-react
+        run: npm test
+
+      - name: Build do frontend-react
+        working-directory: frontend-react
+        run: npm run build

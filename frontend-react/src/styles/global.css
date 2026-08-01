@@ -1,0 +1,79 @@
+:root {
+  --ink: #1c1b19;
+  --ink-soft: #5a564c;
+  --paper: #faf7f2;
+  --paper-line: #e4dfd4;
+  --navy: #1e3a5f;
+  --navy-dark: #16293f;
+  --navy-tint: #e7edf3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+/* Foco visível reforçado em toda a aplicação. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid #d98c00;
+  outline-offset: 2px;
+}
+
+/* Respeita a preferência do sistema por menos movimento. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Classe aplicada via barra de acessibilidade: desliga animações mesmo em
+   sistemas sem a preferência ativada no SO. */
+html.a11y-reduce-motion *,
+html.a11y-reduce-motion *::before,
+html.a11y-reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Fonte ajustável: a barra de acessibilidade altera esse valor em <html>;
+   como o restante do layout deve usar rem, tudo escala em conjunto. */
+html {
+  font-size: 100%;
+}
+html.a11y-font-md {
+  font-size: 112%;
+}
+html.a11y-font-lg {
+  font-size: 125%;
+}
+
+/* Modo alto contraste: paleta com contraste bem acima do mínimo AA. */
+html.a11y-high-contrast body {
+  --ink: #000000;
+  --ink-soft: #000000;
+  --paper: #ffffff;
+  --paper-line: #000000;
+  --navy: #002a52;
+  --navy-dark: #001830;
+  --navy-tint: #d8e6f5;
+}
