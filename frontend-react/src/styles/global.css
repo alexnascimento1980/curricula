@@ -77,3 +77,21 @@ html.a11y-high-contrast body {
   --navy-dark: #001830;
   --navy-tint: #d8e6f5;
 }
+
+/* Cabeçalhos de modal/painel: bloco de cor sólida (apesar do nome, não é
+   um gradiente de verdade — mantido assim pra bater com o app antigo). */
+.bg-gradient-primary {
+  background: var(--navy);
+}
+
+.visually-hidden-focusable:not(:focus):not(:focus-within) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
