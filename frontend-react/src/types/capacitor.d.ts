@@ -24,8 +24,23 @@ declare global {
           ): Promise<PluginListenerHandle>;
           exitApp: () => void;
         };
+        Filesystem: {
+          writeFile: (opts: {
+            path: string;
+            data: string;
+            directory: string;
+          }) => Promise<{ uri: string }>;
+        };
+        Share: {
+          share: (opts: {
+            title: string;
+            url: string;
+            dialogTitle: string;
+          }) => Promise<void>;
+        };
       };
     };
   }
 }
+
 

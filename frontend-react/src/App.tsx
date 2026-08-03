@@ -1,10 +1,20 @@
 import { AccessibilityPanel } from "./components/AccessibilityPanel";
+import { NotificacaoContainer } from "./components/NotificacaoContainer";
 import { AuthModals } from "./components/auth/AuthModals";
+import { CurriculoForm } from "./components/form/CurriculoForm";
 import { AuthProvider } from "./contexts/AuthContext";
+import { useNotificacoes } from "./hooks/useNotificacoes";
 
 function App() {
+  const { notificacoes, notificar, dispensar } = useNotificacoes();
+
   return (
     <AuthProvider>
+      <NotificacaoContainer
+        notificacoes={notificacoes}
+        onDispensar={dispensar}
+      />
+
       <main className="container mt-4 mb-5" style={{ maxWidth: 900 }}>
         <div className="row justify-content-center mb-3">
           <div className="col-md-10">
@@ -14,11 +24,11 @@ function App() {
 
         <div className="row justify-content-center">
           <div className="col-md-10">
-            <p className="text-muted">
-              Migração para React em andamento — Fase 2 (autenticação)
-              completa. O formulário principal ainda vive em{" "}
-              <code>frontend/</code>.
-            </p>
+            <div className="card shadow-lg">
+              <div className="card-body p-4 p-md-5">
+                <CurriculoForm notificar={notificar} />
+              </div>
+            </div>
           </div>
         </div>
       </main>

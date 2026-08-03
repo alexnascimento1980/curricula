@@ -34,9 +34,15 @@ próxima começar.
       com sincronia nos dois sentidos (Esc/clique-fora no Bootstrap
       também atualiza o estado do React). 43 testes cobrindo sessão,
       validação de formulário, foco e o próprio `Modal`.
-- [ ] **Fase 3 — Formulário principal:** blocos dinâmicos (Experiência,
-      Formação, Cursos, Projetos), autosave com debounce, toggles
-      "Incluir no PDF?".
+- [x] **Fase 3 — Formulário principal:** blocos dinâmicos (Experiência,
+      Formação, Cursos, Projetos) com adicionar/remover, cascata
+      Estado→Cidade via API do IBGE, máscara de telefone, limpeza de URL
+      do LinkedIn/GitHub ao sair do campo, toggles "Incluir no PDF?" (cada
+      um controla o `required` dos campos da sua seção), autosave com
+      debounce (mecanismo pronto — o `onAutosave` de verdade entra na
+      Fase 4, junto da troca de currículo), geração e download do PDF
+      (incluindo o caminho nativo Android via Filesystem+Share). 86
+      testes no total do projeto.
 - [ ] **Fase 4 — Painel de currículos salvos + geração de PDF.**
 - [ ] **Fase 5 — Corte final:** desliga `frontend/`, `www/` passa a
       apontar pro build deste projeto, revalida tudo com NVDA + testes.
@@ -85,6 +91,35 @@ npm run test:watch  # Vitest em modo watch
   mock simula só o que os testes precisam (gerenciar `aria-hidden`/
   `aria-modal`, dependendo se abriu ou fechou) — a integração real com o
   Bootstrap de verdade é validada nos testes de `Modal.test.tsx`.
+
+- **Proxy do Vite pro backend Flask em dev** (`vite.config.ts`) — sem
+  isso, `fetch("/generate-cv")` cairia no próprio servidor do Vite (porta
+  5173), que não tem essa rota. Em produção (Fase 5, quando este app for
+  servido pelo próprio Flask) o proxy não é necessário, já é same-origin.
+- **`useAutosave` genérico, aceitando um `onAutosave` opcional** — o
+  `CurriculoForm` não sabe (nem precisa saber) COMO os dados são
+  persistidos; isso mantém o formulário testável isoladamente sem mockar
+  Supabase, e deixa a Fase 4 (troca de currículo, upsert de verdade) livre
+  pra decidir a estratégia de persistência sem reabrir este componente.
+- **Payload calculado sob demanda (`montarPayloadPdf`), não guardado como
+  estado** — o formulário guarda os dados "brutos" (estado/cidade
+  separados, `highlights` como texto livre); a transformação pro formato
+  que a API espera (toggles aplicados, datas formatadas, texto dividido em
+  listas) é uma função pura testada isoladamente, chamada só no momento do
+  envio.
+- **Duas regras novas do `eslint-plugin-react-hooks` pegaram problemas
+  reais** durante o desenvolvimento desta fase também (`set-state-in-effect`
+  no hook do IBGE) — resolvido derivando o estado quando dava, e um
+  comentário `eslint-disable` pontual e justificado quando não dava (o
+  padrão de "buscar dados ao mudar uma prop" é uma exceção legítima,
+  documentada pelo próprio React).
+
+## Aviso de tamanho do bundle
+
+O build mostra um aviso de chunk grande (~520KB JS antes de gzip,
+principalmente Bootstrap + Font Awesome + Supabase). Não é um erro — só
+uma sugestão de otimização (code-splitting) pra revisitar depois que a
+migração terminar, não antes.
 
 ## O que ainda não foi portado
 
