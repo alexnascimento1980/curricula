@@ -1,4 +1,11 @@
-import { type FormEvent, useCallback, useRef, useState } from "react";
+import {
+  type FormEvent,
+  type Ref,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { blobParaBase64 } from "../../lib/curriculoUtils";
 import { montarPayloadPdf } from "../../lib/montarPayloadPdf";
 import { useAutosave } from "../../hooks/useAutosave";
@@ -21,14 +28,32 @@ const API_BASE_URL = window.Capacitor?.isNativePlatform()
   ? "https://careeros-mcau.onrender.com"
   : "";
 
-interface CurriculoFormProps {
-  notificar: (mensagem: string, tipo?: Notificacao["tipo"]) => void;
-  /** Chamado (com debounce) toda vez que os dados do formulário mudam —
-   * a persistência de verdade (upsert no Supabase) entra na Fase 4. */
-  onAutosave?: (dados: DadosCurriculo) => void;
+/**
+ * Capacidades expostas via ref pra quem precisa controlar o formulário de
+ * fora (o gerenciador de currículos da Fase 4: trocar de currículo precisa
+ * forçar o salvamento pendente antes, e carregar os dados do novo).
+ */
+export interface CurriculoFormHandle {
+  carregarDados: (dados: DadosCurriculo) => void;
+  resetarFormulario: () => void;
+  flushAutosave: () => Promise<void>;
+  cancelarAutosave: () => void;
 }
 
-export function CurriculoForm({ notificar, onAutosave }: CurriculoFormProps) {
+interface CurriculoFormProps {
+  ref?: Ref<CurriculoFormHandle>;
+  notificar: (mensagem: string, tipo?: Notificacao["tipo"]) => void;
+  /** Chamado (com debounce) toda vez que os dados do formulário mudam —
+   * a persistência de verdade (upsert no Supabase) é responsabilidade de
+   * quem usa este componente (useResumeManager, na Fase 4). */
+  onAutosave?: (dados: DadosCurriculo) => void | Promise<void>;
+}
+
+export function CurriculoForm({
+  ref,
+  notificar,
+  onAutosave,
+}: CurriculoFormProps) {
   const form = useCurriculoForm();
   const { estados, statusEstados, cidades, statusCidades } =
     useIbgeLocalidades(form.basics.estado);
@@ -40,7 +65,14 @@ export function CurriculoForm({ notificar, onAutosave }: CurriculoFormProps) {
     (dados: DadosCurriculo) => onAutosave?.(dados),
     [onAutosave],
   );
-  useAutosave(form.dadosAtuais, salvarComDebounce);
+  const autosave = useAutosave(form.dadosAtuais, salvarComDebounce);
+
+  useImperativeHandle(ref, () => ({
+    carregarDados: form.carregarDados,
+    resetarFormulario: form.resetarFormulario,
+    flushAutosave: autosave.flush,
+    cancelarAutosave: autosave.cancelar,
+  }));
 
   async function aoSubmeter(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();

@@ -112,3 +112,24 @@ export const DADOS_BASICOS_VAZIOS: DadosBasicos = {
   linkedin: "",
   github: "",
 };
+
+/**
+ * Normaliza dados parciais vindos do banco (um currículo recém-criado
+ * grava `dados: {}`; registros antigos podem estar incompletos) num
+ * `DadosCurriculo` completo com valores padrão seguros — evita
+ * `undefined` se espalhando pelos componentes controlados do formulário.
+ */
+export function normalizarDadosCurriculo(
+  parcial: Partial<DadosCurriculo> | null | undefined,
+): DadosCurriculo {
+  return {
+    basics: { ...DADOS_BASICOS_VAZIOS, ...parcial?.basics },
+    summary: { pt: parcial?.summary?.pt ?? [] },
+    skills: { technical: parcial?.skills?.technical ?? [] },
+    config: { ...CONFIGURACAO_PADRAO, ...parcial?.config },
+    experience: parcial?.experience ?? [],
+    education: parcial?.education ?? [],
+    courses: parcial?.courses ?? [],
+    projects: parcial?.projects ?? [],
+  };
+}

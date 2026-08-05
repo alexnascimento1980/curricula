@@ -43,7 +43,14 @@ próxima começar.
       Fase 4, junto da troca de currículo), geração e download do PDF
       (incluindo o caminho nativo Android via Filesystem+Share). 86
       testes no total do projeto.
-- [ ] **Fase 4 — Painel de currículos salvos + geração de PDF.**
+- [x] **Fase 4 — Painel de currículos salvos + persistência real:**
+      `useResumeManager` orquestra lista, seleção, criação, renomeação e
+      exclusão de currículos no Supabase; autosave de verdade conectado
+      (com `flush` obrigatório antes de trocar de currículo — o mesmo bug
+      que o app antigo já tinha corrigido, replicado aqui); painel lateral
+      (`Offcanvas`, análogo ao `Modal` da Fase 2) com a lista; modal
+      compartilhado para criar/renomear; indicador de status
+      "Salvando.../Salvo". 108 testes no total do projeto.
 - [ ] **Fase 5 — Corte final:** desliga `frontend/`, `www/` passa a
       apontar pro build deste projeto, revalida tudo com NVDA + testes.
 
@@ -120,6 +127,25 @@ O build mostra um aviso de chunk grande (~520KB JS antes de gzip,
 principalmente Bootstrap + Font Awesome + Supabase). Não é um erro — só
 uma sugestão de otimização (code-splitting) pra revisitar depois que a
 migração terminar, não antes.
+
+- **`CurriculoForm` expõe um "handle" imperativo via `ref`** (React 19: `ref`
+  como prop normal, sem precisar de `forwardRef`) — `carregarDados`,
+  `resetarFormulario`, `flushAutosave`, `cancelarAutosave`. Preferi isso a
+  levantar o estado do formulário pra fora (o que quebraria todos os
+  testes da Fase 3): o formulário continua "dono" do seu próprio estado
+  e testável isoladamente; quem gerencia troca de currículo só pede pra
+  ele fazer coisas pontuais.
+- **`Offcanvas.tsx`** — mesmo padrão do `Modal.tsx` (wrapper declarativo
+  em cima da classe imperativa do Bootstrap), reaproveitado pro painel
+  lateral de currículos.
+- **`useResumeManager` não sabe nada sobre React Router nem sobre telas** —
+  só orquestra dados e delega pro `CurriculoFormHandle` via ref. Isso
+  mantém a peça mais complexa da Fase 4 testável com hooks puros
+  (`renderHook`), sem precisar montar a árvore de componentes inteira.
+- **Mais um `eslint-disable` pontual e justificado** (`useResumeManager`,
+  ao deslogar) — chamar métodos de um `ref` só pode acontecer num efeito,
+  nunca durante o render, então o padrão de "ajustar estado durante o
+  render" (usado em outros lugares desta fase) não se aplica aqui.
 
 ## O que ainda não foi portado
 

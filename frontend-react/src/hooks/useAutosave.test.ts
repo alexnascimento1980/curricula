@@ -68,4 +68,45 @@ describe("useAutosave", () => {
     expect(onSalvarAntigo).not.toHaveBeenCalled();
     expect(onSalvarNovo).toHaveBeenCalledWith({ nome: "b" });
   });
+
+  it("flush executa imediatamente e cancela o timer pendente (bug real: trocar de currículo rápido demais)", async () => {
+    const onSalvar = vi.fn();
+    const { result, rerender } = renderHook(
+      ({ dados }) => useAutosave(dados, onSalvar, 1000),
+      { initialProps: { dados: { nome: "inicial" } } },
+    );
+    rerender({ dados: { nome: "editado" } });
+
+    await result.current.flush();
+    expect(onSalvar).toHaveBeenCalledWith({ nome: "editado" });
+    expect(onSalvar).toHaveBeenCalledTimes(1);
+
+    // O timer original não deve disparar de novo depois do flush.
+    vi.advanceTimersByTime(2000);
+    expect(onSalvar).toHaveBeenCalledTimes(1);
+  });
+
+  it("flush não faz nada se não houver nenhum salvamento agendado", async () => {
+    const onSalvar = vi.fn();
+    const { result } = renderHook(() =>
+      useAutosave({ nome: "x" }, onSalvar, 1000),
+    );
+
+    await result.current.flush();
+    expect(onSalvar).not.toHaveBeenCalled();
+  });
+
+  it("cancelar descarta o agendamento sem executar a função", () => {
+    const onSalvar = vi.fn();
+    const { rerender, result } = renderHook(
+      ({ dados }) => useAutosave(dados, onSalvar, 1000),
+      { initialProps: { dados: { nome: "inicial" } } },
+    );
+    rerender({ dados: { nome: "editado" } });
+
+    result.current.cancelar();
+    vi.advanceTimersByTime(2000);
+
+    expect(onSalvar).not.toHaveBeenCalled();
+  });
 });

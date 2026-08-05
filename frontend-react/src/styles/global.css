@@ -95,3 +95,25 @@ html.a11y-high-contrast body {
   white-space: nowrap;
   border: 0;
 }
+
+/* Painel de currículos salvos */
+.resume-item-date {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+.badge-current {
+  background-color: #5c6e3c;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  margin-left: 5px;
+}
+
+@keyframes pulse-save {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+.saving {
+  animation: pulse-save 1s infinite;
+}

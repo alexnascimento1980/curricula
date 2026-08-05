@@ -1,7 +1,7 @@
 import { AccessibilityPanel } from "./components/AccessibilityPanel";
 import { NotificacaoContainer } from "./components/NotificacaoContainer";
 import { AuthModals } from "./components/auth/AuthModals";
-import { CurriculoForm } from "./components/form/CurriculoForm";
+import { ResumeWorkspace } from "./components/resumes/ResumeWorkspace";
 import { AuthProvider } from "./contexts/AuthContext";
 import { useNotificacoes } from "./hooks/useNotificacoes";
 
@@ -26,7 +26,7 @@ function App() {
           <div className="col-md-10">
             <div className="card shadow-lg">
               <div className="card-body p-4 p-md-5">
-                <CurriculoForm notificar={notificar} />
+                <ResumeWorkspace notificar={notificar} />
               </div>
             </div>
           </div>
