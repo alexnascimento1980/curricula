@@ -81,7 +81,6 @@ describe("useAutosave", () => {
     expect(onSalvar).toHaveBeenCalledWith({ nome: "editado" });
     expect(onSalvar).toHaveBeenCalledTimes(1);
 
-    // O timer original não deve disparar de novo depois do flush.
     vi.advanceTimersByTime(2000);
     expect(onSalvar).toHaveBeenCalledTimes(1);
   });

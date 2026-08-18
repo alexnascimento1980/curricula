@@ -10,12 +10,20 @@ function App() {
 
   return (
     <AuthProvider>
+      <a className="skip-link" href="#main-content">
+        Pular para o conteúdo principal
+      </a>
+
       <NotificacaoContainer
         notificacoes={notificacoes}
         onDispensar={dispensar}
       />
 
-      <main className="container mt-4 mb-5" style={{ maxWidth: 900 }}>
+      <main
+        id="main-content"
+        className="container mt-4 mb-5"
+        style={{ maxWidth: 900 }}
+      >
         <div className="row justify-content-center mb-3">
           <div className="col-md-10">
             <AuthModals />
@@ -25,6 +33,12 @@ function App() {
         <div className="row justify-content-center">
           <div className="col-md-10">
             <div className="card shadow-lg">
+              <div className="card-header masthead">
+                <h1 className="mb-0 fw-bold">Currícula</h1>
+                <p className="mb-0">
+                  Gerador de Currículo ATS Bilíngue Inteligente
+                </p>
+              </div>
               <div className="card-body p-4 p-md-5">
                 <ResumeWorkspace notificar={notificar} />
               </div>

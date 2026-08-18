@@ -1,3 +1,6 @@
+import { App } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
+import { Capacitor } from "@capacitor/core";
 import type { User } from "@supabase/supabase-js";
 import { type ReactNode, useEffect, useState } from "react";
 import { supabaseClient } from "../lib/supabaseClient";
@@ -68,44 +71,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Fluxo OAuth nativo (Android/iOS via Capacitor) — só faz algo quando
   // rodando dentro do app empacotado; em navegador comum, isNativePlatform()
-  // não existe/retorna false e este efeito não faz nada.
+  // retorna false e este efeito não faz nada.
   useEffect(() => {
-    if (!window.Capacitor?.isNativePlatform()) return;
+    if (!Capacitor.isNativePlatform()) return;
 
     let handleRemovido = false;
     let handle: { remove: () => Promise<void> } | undefined;
 
-    window.Capacitor.Plugins.App.addListener(
-      "appUrlOpen",
-      async (evento) => {
-        if (!evento.url || !evento.url.startsWith(OAUTH_CALLBACK_URL)) return;
+    App.addListener("appUrlOpen", async (evento) => {
+      if (!evento.url || !evento.url.startsWith(OAUTH_CALLBACK_URL)) return;
 
-        await window.Capacitor?.Plugins.Browser.close().catch(() => {});
+      await Browser.close().catch(() => {});
 
-        const hash = evento.url.split("#")[1] ?? "";
-        const params = new URLSearchParams(hash);
-        const access_token = params.get("access_token");
-        const refresh_token = params.get("refresh_token");
-        const ehRecuperacaoSenha = params.get("type") === "recovery";
+      const hash = evento.url.split("#")[1] ?? "";
+      const params = new URLSearchParams(hash);
+      const access_token = params.get("access_token");
+      const refresh_token = params.get("refresh_token");
+      const ehRecuperacaoSenha = params.get("type") === "recovery";
 
-        if (access_token && refresh_token) {
-          const { error } = await supabaseClient.auth.setSession({
-            access_token,
-            refresh_token,
-          });
-          if (error) return;
+      if (access_token && refresh_token) {
+        const { error } = await supabaseClient.auth.setSession({
+          access_token,
+          refresh_token,
+        });
+        if (error) return;
 
-          // setSession() feito manualmente aqui não dispara o evento
-          // automático PASSWORD_RECOVERY do Supabase (esse evento só ocorre
-          // quando o próprio client detecta e interpreta a URL sozinho) —
-          // por isso checamos o parâmetro "type" e abrimos o fluxo na mão.
-          if (ehRecuperacaoSenha) {
-            setEmailParaRecuperacao("");
-            setEmRecuperacaoDeSenha(true);
-          }
+        // setSession() feito manualmente aqui não dispara o evento
+        // automático PASSWORD_RECOVERY do Supabase (esse evento só ocorre
+        // quando o próprio client detecta e interpreta a URL sozinho) —
+        // por isso checamos o parâmetro "type" e abrimos o fluxo na mão.
+        if (ehRecuperacaoSenha) {
+          setEmailParaRecuperacao("");
+          setEmRecuperacaoDeSenha(true);
         }
-      },
-    ).then((h) => {
+      }
+    }).then((h) => {
       // O efeito pode já ter sido desmontado antes da Promise resolver
       // (ex: hot reload) — se isso aconteceu, remove na hora em vez de
       // guardar um handle órfão.
@@ -143,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
 
     loginComGoogle: async () => {
-      const isNative = window.Capacitor?.isNativePlatform() ?? false;
+      const isNative = Capacitor.isNativePlatform();
 
       if (isNative) {
         const { data, error } = await supabaseClient.auth.signInWithOAuth({
@@ -154,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         });
         if (error) return { error };
-        await window.Capacitor?.Plugins.Browser.open({ url: data.url });
+        await Browser.open({ url: data.url });
         return { error: null };
       }
 
@@ -170,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
 
     enviarLinkRecuperacao: async (email) => {
-      const isNative = window.Capacitor?.isNativePlatform() ?? false;
+      const isNative = Capacitor.isNativePlatform();
       const { error } = await supabaseClient.auth.resetPasswordForEmail(
         email,
         { redirectTo: isNative ? OAUTH_CALLBACK_URL : window.location.origin },

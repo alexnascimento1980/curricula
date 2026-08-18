@@ -100,7 +100,6 @@ describe("useResumeManager", () => {
     );
     await waitFor(() => expect(result.current.currentResumeId).toBe("id-1"));
 
-    // Selecionar o mesmo currículo não deve fazer nada.
     await act(() => result.current.selecionar("id-1"));
     expect(formHandle.current.flushAutosave).not.toHaveBeenCalled();
 
@@ -154,7 +153,7 @@ describe("useResumeManager", () => {
     });
 
     expect(formHandle.current.cancelarAutosave).toHaveBeenCalled();
-    expect(criarCurriculo).not.toHaveBeenCalled(); // já tinha outro, não precisou criar
+    expect(criarCurriculo).not.toHaveBeenCalled();
     expect(result.current.currentResumeId).toBe("id-outro");
   });
 
@@ -169,7 +168,7 @@ describe("useResumeManager", () => {
     await waitFor(() => expect(result.current.currentResumeId).toBe("id-1"));
 
     excluirCurriculoPorId.mockResolvedValue({ error: null });
-    buscarIdMaisRecente.mockResolvedValue(null); // não sobrou nenhum
+    buscarIdMaisRecente.mockResolvedValue(null);
     criarCurriculo.mockResolvedValue("id-reposicao");
     buscarCurriculoPorId.mockResolvedValue({ nome: "Meu Currículo", dados: {} });
 
@@ -214,7 +213,7 @@ describe("useResumeManager", () => {
     await act(async () => {
       await result.current.renomear("id-outro", "Novo Nome");
     });
-    expect(result.current.tituloAtual).toBe("A"); // não mudou
+    expect(result.current.tituloAtual).toBe("A");
 
     await act(async () => {
       await result.current.renomear("id-1", "Título Atualizado");

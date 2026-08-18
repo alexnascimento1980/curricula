@@ -1,3 +1,6 @@
+import { Capacitor } from "@capacitor/core";
+import { Directory, Filesystem } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 import {
   type FormEvent,
   type Ref,
@@ -24,14 +27,14 @@ import { ResumoSection } from "./ResumoSection";
 // Em dev/web comum, URL relativa (o proxy do Vite ou o mesmo servidor
 // Flask em produção cuidam do resto). No app nativo, precisa do endereço
 // completo do backend hospedado.
-const API_BASE_URL = window.Capacitor?.isNativePlatform()
+const API_BASE_URL = Capacitor.isNativePlatform()
   ? "https://careeros-mcau.onrender.com"
   : "";
 
 /**
  * Capacidades expostas via ref pra quem precisa controlar o formulário de
- * fora (o gerenciador de currículos da Fase 4: trocar de currículo precisa
- * forçar o salvamento pendente antes, e carregar os dados do novo).
+ * fora (o gerenciador de currículos: trocar de currículo precisa forçar
+ * o salvamento pendente antes, e carregar os dados do novo).
  */
 export interface CurriculoFormHandle {
   carregarDados: (dados: DadosCurriculo) => void;
@@ -45,7 +48,7 @@ interface CurriculoFormProps {
   notificar: (mensagem: string, tipo?: Notificacao["tipo"]) => void;
   /** Chamado (com debounce) toda vez que os dados do formulário mudam —
    * a persistência de verdade (upsert no Supabase) é responsabilidade de
-   * quem usa este componente (useResumeManager, na Fase 4). */
+   * quem usa este componente (useResumeManager). */
   onAutosave?: (dados: DadosCurriculo) => void | Promise<void>;
 }
 
@@ -103,17 +106,16 @@ export function CurriculoForm({
       const blob = await res.blob();
       const nomeArquivo = `${form.basics.name.trim().replace(/\s+/g, "_")}_curriculo.pdf`;
 
-      if (window.Capacitor?.isNativePlatform()) {
+      if (Capacitor.isNativePlatform()) {
         // Dentro do app, o truque de <a download> do navegador não
         // funciona (o WebView não tem gerenciador de downloads) — grava
         // no armazenamento do app e abre a folha nativa de
         // compartilhamento/salvamento.
         const base64Data = await blobParaBase64(blob);
-        const { Filesystem, Share } = window.Capacitor.Plugins;
         const arquivo = await Filesystem.writeFile({
           path: nomeArquivo,
           data: base64Data,
-          directory: "CACHE",
+          directory: Directory.Cache,
         });
         await Share.share({
           title: "Currículo em PDF",

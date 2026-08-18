@@ -23,6 +23,9 @@ export function useResumeManager(
   const [currentResumeId, setCurrentResumeId] = useState<string | null>(null);
   const [tituloAtual, setTituloAtual] = useState(TITULO_SEM_SELECAO);
   const [carregando, setCarregando] = useState(false);
+  const [statusSalvamento, setStatusSalvamento] = useState<
+    "oculto" | "salvando" | "salvo"
+  >("oculto");
 
   const recarregarLista = useCallback(async (uid: string) => {
     setResumes(await listarCurriculos(uid));
@@ -143,10 +146,6 @@ export function useResumeManager(
     },
     [currentResumeId, userId, formHandle, carregarPorId, recarregarLista],
   );
-
-  const [statusSalvamento, setStatusSalvamento] = useState<
-    "oculto" | "salvando" | "salvo"
-  >("oculto");
 
   const salvar = useCallback(
     async (dados: DadosCurriculo) => {

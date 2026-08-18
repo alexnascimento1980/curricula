@@ -26,8 +26,9 @@ próxima começar.
       de foco (abre → foco no primeiro controle; Esc → fecha e devolve o
       foco; clique fora → fecha sem devolver foco).
 - [x] **Fase 2 — Autenticação:** login/cadastro/Google, recuperação de
-      senha (incluindo o fluxo OAuth nativo Android via
-      `window.Capacitor`), `AuthContext` + `useAuth()`. Trouxe Bootstrap
+      senha (incluindo o fluxo OAuth nativo Android, hoje via imports reais
+      de `@capacitor/core`/`@capacitor/app`/`@capacitor/browser` — ver nota
+      da Fase 5 abaixo), `AuthContext` + `useAuth()`. Trouxe Bootstrap
       e Font Awesome via npm nesta fase (antes do previsto — precisava
       dos modais). Componente `Modal` reutilizável envolve o
       `bootstrap.Modal` imperativo numa API declarativa (`open`/`onClose`),
@@ -46,13 +47,29 @@ próxima começar.
 - [x] **Fase 4 — Painel de currículos salvos + persistência real:**
       `useResumeManager` orquestra lista, seleção, criação, renomeação e
       exclusão de currículos no Supabase; autosave de verdade conectado
-      (com `flush` obrigatório antes de trocar de currículo — o mesmo bug
-      que o app antigo já tinha corrigido, replicado aqui); painel lateral
-      (`Offcanvas`, análogo ao `Modal` da Fase 2) com a lista; modal
+      (com `flush` obrigatório antes de trocar de currículo); painel
+      lateral (`Offcanvas`, análogo ao `Modal` da Fase 2); modal
       compartilhado para criar/renomear; indicador de status
       "Salvando.../Salvo". 108 testes no total do projeto.
-- [ ] **Fase 5 — Corte final:** desliga `frontend/`, `www/` passa a
-      apontar pro build deste projeto, revalida tudo com NVDA + testes.
+- [~] **Fase 5 — Corte final (em andamento — feito o lado Android, web
+      pendente):**
+  - [x] Trocado `window.Capacitor.Plugins.X` (tipos inventados à mão) por
+        imports reais (`@capacitor/core`, `@capacitor/app`,
+        `@capacitor/browser`, `@capacitor/filesystem`, `@capacitor/share`)
+        — tipos de verdade, não mais um `.d.ts` ambiente escrito por mim.
+  - [x] Script `npm run build:android` (builda direto pra `../www`) +
+        `npx cap sync android` testados de ponta a ponta — o app Android
+        já empacota o build do React, não mais do `frontend/` antigo.
+  - [ ] **Ainda não testado em dispositivo físico** (dependência externa,
+        não é um bloqueio de código).
+  - [ ] Revalidação de acessibilidade com NVDA na versão React (foi
+        validada peça por peça em cada fase, mas nunca ponta a ponta como
+        um todo já integrado).
+  - [ ] Corte da versão **web**: `backend/app.py` ainda serve o
+        `frontend/` antigo em produção — só migra quando as duas
+        validações acima passarem. Decisão deliberada: o Android tem
+        menos usuários em risco que o site em produção, então corta
+        primeiro o lado de menor risco.
 
 ## Comandos
 
@@ -60,9 +77,17 @@ próxima começar.
 npm install       # instalar dependências (rodar dentro de frontend-react/)
 npm run dev       # servidor de desenvolvimento
 npm run build     # build de produção (gera dist/)
+npm run build:android  # builda direto para ../www (usado pelo Capacitor/Android)
 npm run lint      # ESLint
 npm test          # Vitest (roda uma vez)
 npm run test:watch  # Vitest em modo watch
+```
+
+Depois de `build:android`, sincronize com o projeto nativo (rodar a partir
+da raiz do repositório, não daqui de dentro):
+```bash
+cd ..
+npx cap sync android
 ```
 
 ## Decisões técnicas
@@ -128,24 +153,18 @@ principalmente Bootstrap + Font Awesome + Supabase). Não é um erro — só
 uma sugestão de otimização (code-splitting) pra revisitar depois que a
 migração terminar, não antes.
 
-- **`CurriculoForm` expõe um "handle" imperativo via `ref`** (React 19: `ref`
-  como prop normal, sem precisar de `forwardRef`) — `carregarDados`,
-  `resetarFormulario`, `flushAutosave`, `cancelarAutosave`. Preferi isso a
-  levantar o estado do formulário pra fora (o que quebraria todos os
-  testes da Fase 3): o formulário continua "dono" do seu próprio estado
-  e testável isoladamente; quem gerencia troca de currículo só pede pra
-  ele fazer coisas pontuais.
-- **`Offcanvas.tsx`** — mesmo padrão do `Modal.tsx` (wrapper declarativo
-  em cima da classe imperativa do Bootstrap), reaproveitado pro painel
-  lateral de currículos.
-- **`useResumeManager` não sabe nada sobre React Router nem sobre telas** —
-  só orquestra dados e delega pro `CurriculoFormHandle` via ref. Isso
-  mantém a peça mais complexa da Fase 4 testável com hooks puros
-  (`renderHook`), sem precisar montar a árvore de componentes inteira.
-- **Mais um `eslint-disable` pontual e justificado** (`useResumeManager`,
-  ao deslogar) — chamar métodos de um `ref` só pode acontecer num efeito,
-  nunca durante o render, então o padrão de "ajustar estado durante o
-  render" (usado em outros lugares desta fase) não se aplica aqui.
+- **`npm run build:android` builda direto pra `../www`** em vez de gerar
+  em `dist/` e copiar depois — o Vite já suporta `--outDir` fora da pasta
+  do projeto nativamente, então não precisa de um passo de cópia manual
+  (que era exatamente o tipo de coisa que causava bug no app antigo: uma
+  vez um `Copy-Item -Recurse` do PowerShell aninhou a pasta `vendor`
+  dentro dela mesma porque o destino já existia).
+- **Corte em duas etapas (Android primeiro, web depois)** — o Android
+  ainda não foi publicado pra usuários finais reais, então o risco de
+  cortar pra lá primeiro é bem menor que trocar o que está servindo o
+  site em produção agora. Só migra o `backend/app.py` pra servir o build
+  do React depois que o Android for validado em aparelho físico e a
+  acessibilidade for revalidada com NVDA na versão integrada.
 
 ## O que ainda não foi portado
 
