@@ -17,7 +17,6 @@ Este documento reflete o estado real do projeto, não uma lista de metas aspirac
 
 - **Migração frontend/ → frontend-react/**: a versão React ainda não está ligada ao Flask (que continua servindo `frontend/` na web). Ver `docs/architecture.md` e `docs/frontend.md` para o estado exato dessa divergência.
 - **Paridade de acessibilidade** entre os dois frontends — o commit mais recente corrigiu regressões (h1, skip link, CSS de seção) só do lado React; falta confirmar que `frontend/` não tem os mesmos problemas ou já foi corrigido antes.
-- **Versionamento das policies de RLS do Supabase**: scaffold criado em `supabase/migrations/`, reconstruído a partir do código cliente — falta a sincronização com o projeto Supabase real (`supabase db pull`) para confirmar que reflete o que está de fato ativo. Ver `supabase/README.md`.
 
 ## Considerações em aberto (não comprometidas com prazo)
 
@@ -31,7 +30,8 @@ Levantadas durante revisão do estado do projeto, ainda sem decisão tomada:
 
 - Limite de tamanho/quantidade em listas aninhadas do payload de `/generate-cv` (`highlights_pt`, `summary.pt`, etc.) — fechava um vetor de amplificação de chamadas ao serviço de tradução.
 - `frontend-react/` adicionado ao Dependabot.
-- Scaffold de RLS versionado (ver item acima, ainda pendente de sincronização).
+- **RLS de `curriculos` versionada e conferida contra o projeto Supabase real** (2026-09-10, via MCP) — `supabase/migrations/20260910000000_curriculos_schema_e_rls_reconstruida.sql` agora reflete exatamente o schema e as policies em produção; não havia IDOR. Ver `docs/security.md` e `supabase/README.md`.
+- **FK de `curriculos.user_id` corrigida para `ON DELETE CASCADE`** — a divergência encontrada na conferência acima (item anterior) foi aplicada em produção no mesmo dia via `supabase/migrations/20260910230048_curriculos_user_id_on_delete_cascade.sql`.
 
 ## Como este documento é mantido
 

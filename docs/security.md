@@ -50,7 +50,9 @@ Exceções não tratadas em `/generate-cv` são logadas com detalhe completo só
 
 - Autenticação delegada inteiramente ao Supabase Auth (e-mail/senha, OAuth Google, recuperação de senha). O backend Flask não gerencia sessão nem cookie de autenticação — ele nem sabe quem é o usuário, só processa o payload de geração de PDF.
 - A chave usada no client (`sb_publishable_...`) é uma chave **publishable**, projetada para ser exposta no bundle JS — não é um segredo. O controle de acesso real é feito pelas **policies de Row Level Security (RLS)** do Postgres, avaliadas a cada query usando o JWT do usuário autenticado.
-- **Gap conhecido, em processo de mitigação**: as chamadas ao Supabase no client (`frontend-react/src/lib/resumeService.ts`) filtram os currículos só por `id`, sem repetir o filtro por `user_id` — a segurança desse acesso depende inteiramente das policies de RLS estarem corretas no lado do Supabase. Isso é uma prática aceitável em apps Supabase (é o modelo pretendido), mas as policies de RLS não tinham nenhuma versão revisável em código. Existe agora um scaffold em `supabase/migrations/` com o schema e as policies **reconstruídos a partir do uso que o client faz da tabela** — não extraídos do projeto real. Ele ainda precisa ser sincronizado com o Supabase de verdade (`supabase db pull`, ver `supabase/README.md`) antes de ser tratado como documentação confiável do que está de fato em produção. Até essa sincronização acontecer, o risco descrito abaixo continua valendo integralmente.
+- As chamadas ao Supabase no client (`frontend-react/src/lib/resumeService.ts`) filtram os currículos só por `id`, sem repetir o filtro por `user_id` — a segurança desse acesso depende inteiramente das policies de RLS estarem corretas no lado do Supabase. Isso é uma prática aceitável em apps Supabase (é o modelo pretendido), desde que as policies de fato apliquem `auth.uid() = user_id`.
+- **Confirmado em 2026-09-10** contra o projeto Supabase real (`vaiedrsonmktbnkcktqv`, via MCP — `pg_policies`, `information_schema.columns`, `pg_constraint`): as 4 policies (`select`/`insert`/`update`/`delete`) aplicam exatamente `auth.uid() = user_id`, sem exceção. **Não há IDOR** — o acesso por `id` sem filtro de dono no client é seguro porque o banco barra qualquer linha que não pertença ao usuário autenticado. `supabase/migrations/20260910000000_curriculos_schema_e_rls_reconstruida.sql` foi atualizado para refletir exatamente o schema e as policies reais (nomes das policies, defaults de coluna, ausência de `created_at`) — ver o cabeçalho do arquivo para o detalhe de cada divergência que existia na versão anterior (reconstruída só a partir do código cliente). Esse arquivo agora pode ser tratado como documentação confiável do que está ativo em produção.
+- A FK de `curriculos.user_id` para `auth.users(id)` não tinha `ON DELETE CASCADE` no projeto real — apagar uma conta com currículos falharia por violação de FK em vez de limpar os currículos em cascata. Corrigido em produção no mesmo dia (`supabase/migrations/20260910230048_curriculos_user_id_on_delete_cascade.sql`): a FK agora tem `ON DELETE CASCADE`, então excluir um usuário no `auth.users` apaga seus currículos automaticamente.
 
 ## Segredos e credenciais
 
@@ -65,9 +67,8 @@ Exceções não tratadas em `/generate-cv` são logadas com detalhe completo só
 
 ## Resumo de riscos residuais conhecidos
 
-1. RLS do Supabase — único ponto de autorização — ainda sem confirmação de que o scaffold em `supabase/migrations/` reflete o que está de fato ativo no projeto real; até essa sincronização, mudanças na policy continuam sem revisão de código possível.
-2. Sem limite de tamanho/quantidade em listas aninhadas (`highlights` etc.) — possível amplificação de chamadas de tradução.
-3. `ALLOWED_ORIGINS` cai para `"*"` se esquecido no deploy.
-4. `frontend-react/` fora do Dependabot.
+1. Sem limite de tamanho/quantidade em listas aninhadas (`highlights` etc.) — possível amplificação de chamadas de tradução.
+2. `ALLOWED_ORIGINS` cai para `"*"` se esquecido no deploy.
+3. `frontend-react/` fora do Dependabot.
 
 Nenhum desses é uma vulnerabilidade explorada ou com exploit conhecido hoje — são pontos de atenção para quem for mexer nessas áreas, não incêndios.
