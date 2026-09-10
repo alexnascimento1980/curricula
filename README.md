@@ -85,12 +85,14 @@ Currícula/
 │   ├── requirements.txt           # Dependências de produção
 │   └── requirements-dev.txt       # Dependências de desenvolvimento/teste
 ├── docs/                          # Documentação estendida do projeto
-├── frontend/
+├── frontend/                       # Versão web atual (Vanilla JS) — é o que o Flask serve em produção
 │   ├── index.html                 # Interface do usuário (formulário)
 │   ├── script.js                  # Lógica de frontend (auth, currículos, envio de dados)
 │   ├── utils.js                   # Funções puras extraídas (testáveis isoladamente)
 │   └── utils.test.js              # Suíte de testes do frontend (Vitest)
-├── www/                           # Cópia web empacotada pelo Capacitor (sincronizada de frontend/)
+├── frontend-react/                 # Reescrita em React + TypeScript, em migração (ver docs/frontend.md)
+│   └── src/                       # Componentes, hooks, testes (Vitest + Testing Library)
+├── www/                           # Build do frontend-react (vite build --outDir ../www), empacotado no app Android via Capacitor
 ├── capacitor.config.json
 ├── CHANGELOG.md                   # Histórico de versões do projeto
 ├── CONTRIBUTING.md                # Guia de contribuição
@@ -111,7 +113,7 @@ Currícula/
 └── README.md
 ```
 
-> **Nota:** `www/` é uma cópia gerada pelo Capacitor a partir de `frontend/` — sempre edite os arquivos em `frontend/` e rode `npx cap sync android` para propagar a mudança pro app mobile.
+> **Nota:** `www/` é o build do `frontend-react/` (`npm run build:android` dentro de `frontend-react/`, que roda `vite build --outDir ../www`), usado pelo Capacitor para empacotar o app Android — não edite `www/` diretamente. O `frontend/` (Vanilla JS) é servido separadamente pelo Flask e é o que roda na versão web hoje; os dois frontends ainda não estão unificados (ver `docs/architecture.md`).
 
 ## ▶️ Como rodar localmente
 

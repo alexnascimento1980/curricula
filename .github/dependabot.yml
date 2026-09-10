@@ -25,6 +25,19 @@ updates:
       - "dependencies"
       - "frontend"
 
+  # frontend-react/ é um projeto Node independente (package.json próprio,
+  # ver docs/frontend.md) e não era coberto pela entrada acima, que só olha
+  # a raiz do repositório — React, Vite, Vitest e supabase-js aqui ficavam
+  # sem atualização automática.
+  - package-ecosystem: "npm"
+    directory: "/frontend-react"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "frontend-react"
+
   # As próprias actions usadas nos workflows (actions/checkout,
   # actions/setup-python, actions/setup-node...), pra não ficarem presas
   # em versões antigas/descontinuadas silenciosamente.

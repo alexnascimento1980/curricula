@@ -267,6 +267,116 @@ def test_validar_dados_cv_courses_item_nao_dict():
 
 
 # ==========================================
+# validar_dados_cv — limites em campos de texto livre / listas aninhadas
+#
+# Sem esses limites, um payload pequeno em bytes (dentro do MAX_CONTENT_LENGTH
+# de 2 MB) poderia conter muitas strings curtas espalhadas em summary.pt,
+# highlights_pt etc — cada uma virando uma chamada ao serviço de tradução em
+# traduzir_payload. Isso testa que o limite existe e é aplicado de fato, não
+# só documentado em comentário.
+# ==========================================
+def test_validar_dados_cv_summary_excede_limite_de_itens():
+    d = payload_valido()
+    d["summary"]["pt"] = ["texto"] * (app_module.LIMITE_ITENS_LISTA_TEXTO + 1)
+    ok, msg = app_module.validar_dados_cv(d)
+    assert ok is False
+    assert "summary.pt" in msg
+    assert "limite" in msg
+
+
+def test_validar_dados_cv_summary_item_excede_limite_de_caracteres():
+    d = payload_valido()
+    d["summary"]["pt"] = ["a" * (app_module.LIMITE_CARACTERES_DESCRICAO + 1)]
+    ok, msg = app_module.validar_dados_cv(d)
+    assert ok is False
+    assert "summary.pt" in msg
+
+
+def test_validar_dados_cv_skills_technical_item_excede_limite_de_caracteres():
+    d = payload_valido()
+    d["skills"]["technical"] = ["a" * (app_module.LIMITE_CARACTERES_TITULO + 1)]
+    ok, msg = app_module.validar_dados_cv(d)
+    assert ok is False
+    assert "skills.technical" in msg
+
+
+def test_validar_dados_cv_basics_label_pt_excede_limite():
+    d = payload_valido()
+    d["basics"]["label_pt"] = "a" * (app_module.LIMITE_CARACTERES_TITULO + 1)
+    ok, msg = app_module.validar_dados_cv(d)
+    assert ok is False
+    assert "label_pt" in msg
+
+
+def test_validar_dados_cv_experience_position_pt_excede_limite():
+    d = payload_valido()
+    d["experience"][0]["position_pt"] = "a" * (app_module.LIMITE_CARACTERES_TITULO + 1)
+    ok, msg = app_module.validar_dados_cv(d)
+    assert ok is False
+    assert "position_pt" in msg
+
+
+def test_validar_dados_cv_experience_highlights_excede_limite_de_itens():
+    d = payload_valido()
+    d["experience"][0]["highlights_pt"] = ["destaque"] * (
+        app_module.LIMITE_ITENS_LISTA_TEXTO + 1
+    )
+    ok, msg = app_module.validar_dados_cv(d)
+    assert ok is False
+    assert "highlights_pt" in msg
+
+
+def test_validar_dados_cv_experience_highlights_item_excede_limite_de_caracteres():
+    d = payload_valido()
+    d["experience"][0]["highlights_pt"] = [
+        "a" * (app_module.LIMITE_CARACTERES_DESCRICAO + 1)
+    ]
+    ok, msg = app_module.validar_dados_cv(d)
+    assert ok is False
+    assert "highlights_pt" in msg
+
+
+def test_validar_dados_cv_experience_highlights_dentro_do_limite_passa():
+    d = payload_valido()
+    d["experience"][0]["highlights_pt"] = ["Entregou X", "Liderou Y"]
+    ok, _ = app_module.validar_dados_cv(d)
+    assert ok is True
+
+
+def test_validar_dados_cv_education_area_pt_excede_limite():
+    d = payload_valido()
+    d["education"] = [{"area_pt": "a" * (app_module.LIMITE_CARACTERES_TITULO + 1)}]
+    ok, msg = app_module.validar_dados_cv(d)
+    assert ok is False
+    assert "area_pt" in msg
+
+
+def test_validar_dados_cv_courses_name_pt_excede_limite():
+    d = payload_valido()
+    d["courses"] = [{"name_pt": "a" * (app_module.LIMITE_CARACTERES_TITULO + 1)}]
+    ok, msg = app_module.validar_dados_cv(d)
+    assert ok is False
+    assert "name_pt" in msg
+
+
+def test_validar_dados_cv_projects_description_pt_excede_limite():
+    d = payload_valido()
+    d["projects"] = [
+        {"description_pt": "a" * (app_module.LIMITE_CARACTERES_DESCRICAO + 1)}
+    ]
+    ok, msg = app_module.validar_dados_cv(d)
+    assert ok is False
+    assert "description_pt" in msg
+
+
+def test_validar_dados_cv_projects_description_pt_dentro_do_limite_passa():
+    d = payload_valido()
+    d["projects"] = [{"description_pt": "a" * app_module.LIMITE_CARACTERES_DESCRICAO}]
+    ok, _ = app_module.validar_dados_cv(d)
+    assert ok is True
+
+
+# ==========================================
 # /generate-cv (integração ponta a ponta, incluindo WeasyPrint de verdade)
 # ==========================================
 def test_generate_cv_payload_invalido_retorna_400(client):

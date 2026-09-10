@@ -24,6 +24,17 @@ app = Flask(__name__, static_folder=FRONTEND_DIR)
 # Protege contra payloads absurdamente grandes (abuso/DoS via geração de PDF).
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # 2 MB
 
+# Limites para campos de texto livre que alimentam traduzir_payload (label_pt,
+# summary.pt, highlights_pt, etc). MAX_CONTENT_LENGTH já limita o tamanho do
+# payload em bytes, mas um payload pequeno pode conter muitas strings curtas
+# — e cada string vira uma chamada ao serviço de tradução. Sem um limite
+# dedicado aqui, isso permite que uma única requisição (já limitada a
+# 10/min pelo rate limiter) dispare um número desproporcional de chamadas
+# de tradução de uma vez só.
+LIMITE_ITENS_LISTA_TEXTO = 30
+LIMITE_CARACTERES_TITULO = 200
+LIMITE_CARACTERES_DESCRICAO = 500
+
 # Em produção, defina ALLOWED_ORIGINS (separado por vírgulas) para restringir
 # quem pode chamar a API. Em desenvolvimento, libera tudo por padrão.
 _origins_env = os.environ.get("ALLOWED_ORIGINS", "*")
@@ -159,6 +170,44 @@ def normalizar_url_perfil(valor):
     return valor
 
 
+def _validar_texto(valor, nome_campo, limite_caracteres=LIMITE_CARACTERES_TITULO):
+    """Valida o tamanho de um campo de texto livre único (não lista)."""
+    if len(str(valor or "")) > limite_caracteres:
+        return (
+            False,
+            f"O campo '{nome_campo}' excede o limite de {limite_caracteres} caracteres.",
+        )
+    return True, ""
+
+
+def _validar_lista_de_textos(
+    valor, nome_campo, limite_caracteres=LIMITE_CARACTERES_DESCRICAO
+):
+    """Valida uma lista de textos livres (ex: summary.pt, highlights_pt):
+    tipo, quantidade de itens e tamanho de cada item.
+
+    Existe por causa de traduzir_payload: cada string de uma lista dessas
+    vira uma chamada ao serviço de tradução. Sem este limite, um payload
+    pequeno em bytes mas com muitas strings curtas dispararia um volume
+    desproporcional de chamadas de tradução numa única requisição.
+    """
+    if not isinstance(valor, list):
+        return False, f"O campo '{nome_campo}' deve ser uma lista de textos."
+    if len(valor) > LIMITE_ITENS_LISTA_TEXTO:
+        return (
+            False,
+            f"O campo '{nome_campo}' excede o limite de {LIMITE_ITENS_LISTA_TEXTO} itens.",
+        )
+    for i, texto in enumerate(valor):
+        if len(str(texto)) > limite_caracteres:
+            mensagem = (
+                f"O item {i + 1} de '{nome_campo}' excede o limite de "
+                f"{limite_caracteres} caracteres."
+            )
+            return False, mensagem
+    return True, ""
+
+
 def validar_dados_cv(data):
     if not data or not isinstance(data, dict):
         return False, "O payload deve ser um objeto JSON válido."
@@ -187,19 +236,27 @@ def validar_dados_cv(data):
     if github and "github.com" not in github.lower():
         return False, "O campo 'basics.github' deve ser um link do github.com."
 
+    ok, erro = _validar_texto(basics.get("label_pt", ""), "basics.label_pt")
+    if not ok:
+        return False, erro
+
     # --- summary (obrigatório) ---
     summary = data.get("summary")
     if not isinstance(summary, dict):
         return False, "O bloco 'summary' é obrigatório e deve ser um objeto."
-    if not isinstance(summary.get("pt", []), list):
-        return False, "O campo 'summary.pt' deve ser uma lista de textos."
+    ok, erro = _validar_lista_de_textos(summary.get("pt", []), "summary.pt")
+    if not ok:
+        return False, erro
 
     # --- skills (obrigatório) ---
     skills = data.get("skills")
     if not isinstance(skills, dict):
         return False, "O bloco 'skills' é obrigatório e deve ser um objeto."
-    if not isinstance(skills.get("technical", []), list):
-        return False, "O campo 'skills.technical' deve ser uma lista."
+    ok, erro = _validar_lista_de_textos(
+        skills.get("technical", []), "skills.technical", LIMITE_CARACTERES_TITULO
+    )
+    if not ok:
+        return False, erro
 
     # --- blocos em lista (obrigatórios: experience/education; opcionais: courses/projects) ---
     listas_obrigatorias = ["experience", "education"]
@@ -228,6 +285,38 @@ def validar_dados_cv(data):
     for i, xp in enumerate(data.get("experience", [])):
         if not str(xp.get("company", "")).strip():
             return False, f"O item {i + 1} de 'experience' precisa do campo 'company'."
+        ok, erro = _validar_texto(
+            xp.get("position_pt", ""), f"experience[{i + 1}].position_pt"
+        )
+        if not ok:
+            return False, erro
+        ok, erro = _validar_lista_de_textos(
+            xp.get("highlights_pt", []), f"experience[{i + 1}].highlights_pt"
+        )
+        if not ok:
+            return False, erro
+
+    for i, edu in enumerate(data.get("education", [])):
+        for subcampo in ("area_pt", "status_pt"):
+            ok, erro = _validar_texto(
+                edu.get(subcampo, ""), f"education[{i + 1}].{subcampo}"
+            )
+            if not ok:
+                return False, erro
+
+    for i, curso in enumerate(data.get("courses", [])):
+        ok, erro = _validar_texto(curso.get("name_pt", ""), f"courses[{i + 1}].name_pt")
+        if not ok:
+            return False, erro
+
+    for i, proj in enumerate(data.get("projects", [])):
+        ok, erro = _validar_texto(
+            proj.get("description_pt", ""),
+            f"projects[{i + 1}].description_pt",
+            LIMITE_CARACTERES_DESCRICAO,
+        )
+        if not ok:
+            return False, erro
 
     return True, "Dados validados com sucesso"
 
