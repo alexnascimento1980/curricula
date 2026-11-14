@@ -10,16 +10,14 @@ Currícula é uma aplicação full-stack que gera currículos em PDF acessíveis
                     │  Auth · RLS · storage   │
                     └───────────┬────────────┘
                                 │
-                 ┌──────────────┼──────────────┐
-                 │              │              │
-        ┌────────▼───────┐ ┌────▼──────┐ ┌─────▼──────┐
-        │ frontend/       │ │frontend-  │ │  (futuro)  │
-        │ (Vanilla JS)    │ │react/     │ │   iOS      │
-        │ servido pelo    │ │(React+TS) │ │            │
-        │ Flask — web     │ │→ www/ →   │ │            │
-        │                 │ │ Capacitor │ │            │
-        │                 │ │ → Android │ │            │
-        └────────┬────────┘ └───────────┘ └────────────┘
+                 ┌──────────────┴──────────────┐
+                 │                             │
+        ┌────────▼────────────────┐ ┌─────▼──────┐
+        │ frontend-react/ (React)  │ │  (futuro)  │
+        │ web: dist/ servido pelo  │ │    iOS     │
+        │ Flask · Android: www/ →  │ │            │
+        │ Capacitor                │ │            │
+        └────────┬─────────────────┘ └────────────┘
                  │ POST /generate-cv
         ┌────────▼────────┐
         │  Flask (app.py)  │
@@ -53,15 +51,11 @@ Flask servido via Gunicorn em produção (ver `Dockerfile`). Responsabilidades:
 
 O backend **não tem banco de dados próprio**. Toda persistência de currículos e autenticação de usuário vive no Supabase; o Flask só processa a requisição de geração de PDF (que recebe os dados diretamente do client, não os lê do banco).
 
-### Frontends — dois, hoje, por causa de uma migração em andamento
+### Frontend
 
-Esse é o ponto mais importante para quem for mexer no projeto agora:
+- **`frontend-react/`** (React 19 + TypeScript + Vite, testes com Vitest + Testing Library) cobre autenticação, formulário e painel de currículos. Na web, o Flask serve o build `frontend-react/dist` (`REACT_DIST_DIR` em `app.py`, com fallback de SPA para `index.html`; o `Dockerfile` gera o build num estágio Node). O CSP usa `script-src 'self'`, sem `'unsafe-inline'`.
 
-- **`frontend-react/`** é servido pelo Flask quando `frontend-react/dist` existe (`REACT_DIST_DIR` em `app.py`, com fallback de SPA para `index.html`; o `Dockerfile` gera o build num estágio Node). Nesse modo o CSP usa `script-src 'self'`, sem `'unsafe-inline'`.
-- **`frontend/`** (HTML/CSS/JS puro + Bootstrap) é o fallback legado: só é servido quando não há `dist/`. Está de saída.
-- **`frontend-react/`** (React 19 + TypeScript + Vite) é a reescrita, com testes (Vitest + Testing Library), autenticação, formulário e painel de currículos migrados. Alimenta tanto a web (via `dist/` servido pelo Flask) quanto o app Android (`npm run build:android` gera `www/`, que o Capacitor empacota).
-
-Na prática: com o `dist/` presente, web e Android já rodam a mesma base de código. O `frontend/` legado só continua no repositório como fallback, até ser aposentado — correções de UI devem ir só para `frontend-react/`.
+Web e Android compartilham a mesma base de código. Sem `dist/`, o Flask só expõe a API.
 
 `www/` é build artefato (gerado, não escrito à mão) e **não é versionado** (está no `.gitignore`) — gere com `npm run build:android` antes de `npx cap sync android`; qualquer mudança de UI entra via `frontend-react/src`.
 

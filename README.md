@@ -10,7 +10,7 @@ O **Currícula** é uma aplicação web full-stack para gerar currículos profis
 
 - **Múltiplos currículos por usuário:** crie, liste, alterne, renomeie e exclua diferentes versões do currículo (ex: uma para vagas de gestão, outra para tecnologia), todas salvas na nuvem.
 - **Autenticação completa:** cadastro e login por e-mail/senha, login com Google (OAuth), e recuperação de senha por e-mail — tudo via Supabase Auth.
-- **Interface dinâmica:** formulário em Vanilla JS + Bootstrap, com blocos repetíveis (Experiências, Formações, Cursos, Projetos) adicionados/removidos sob demanda.
+- **Interface dinâmica:** formulário em React + TypeScript + Bootstrap, com blocos repetíveis (Experiências, Formações, Cursos, Projetos) adicionados/removidos sob demanda.
 - **Seções opcionais ("Incluir no PDF?"):** cada seção (Experiência, Formação, Cursos, Projetos) pode ser individualmente incluída ou ocultada do documento final, sem exigir preenchimento de seções que o candidato não quer usar.
 - **Tradução automática (PT → EN):** com um clique, todo o conteúdo do currículo é traduzido para inglês. Se o serviço de tradução falhar, o sistema recusa gerar o PDF em vez de entregar um documento parcialmente traduzido.
 - **PDF acessível (PDF/UA):** gerado via WeasyPrint a partir de um template HTML — o PDF final tem árvore de estrutura semântica real (headings, listas, links com texto alternativo), navegável por leitores de tela e com marcadores (bookmarks) por seção, não só texto solto numa página.
@@ -33,7 +33,7 @@ Encontrou uma vulnerabilidade? Veja a política de segurança do repositório pa
 
 O backend tem uma suíte com **63 testes** (`pytest`), cobrindo validação de dados, normalização de URLs, o endpoint de geração de PDF de ponta a ponta (incluindo renderização real via WeasyPrint), e testes de regressão específicos da estrutura PDF/UA do arquivo gerado (árvore de estrutura semântica, idioma, texto alternativo dos links).
 
-O frontend tem uma suíte com **21 testes** (`Vitest` + `jsdom`), cobrindo a lógica extraída para `frontend/utils.js`: normalização de URLs, formatação de datas, conversão de arquivo para base64, o toggle "Incluir no PDF?" (sem nunca marcar caixas de seleção como obrigatórias) e o debounce do autosave (incluindo o cenário de trocar de currículo rapidamente).
+O frontend (`frontend-react/`) tem uma suíte com **111 testes** (`Vitest` + Testing Library), cobrindo autenticação, formulário, painel de currículos, hooks (autosave, gerenciador de currículos) e a montagem do payload enviado ao `/generate-cv`.
 
 Ambas rodam automaticamente via GitHub Actions a cada push/PR, junto com um workflow separado de lint/code quality (`ruff`, `black`, `isort`, `eslint`).
 
@@ -41,7 +41,7 @@ Ambas rodam automaticamente via GitHub Actions a cada push/PR, junto com um work
 
 **Frontend:**
 
-- HTML5, CSS3, JavaScript (ES6+)
+- React 19, TypeScript, Vite
 - Bootstrap 5
 - Supabase JS Client (autenticação e banco de dados)
 
@@ -85,11 +85,6 @@ Currícula/
 │   ├── requirements.txt           # Dependências de produção
 │   └── requirements-dev.txt       # Dependências de desenvolvimento/teste
 ├── docs/                          # Documentação estendida do projeto
-├── frontend/                       # Versão web atual (Vanilla JS) — é o que o Flask serve em produção
-│   ├── index.html                 # Interface do usuário (formulário)
-│   ├── script.js                  # Lógica de frontend (auth, currículos, envio de dados)
-│   ├── utils.js                   # Funções puras extraídas (testáveis isoladamente)
-│   └── utils.test.js              # Suíte de testes do frontend (Vitest)
 ├── frontend-react/                 # Reescrita em React + TypeScript, em migração (ver docs/frontend.md)
 │   └── src/                       # Componentes, hooks, testes (Vitest + Testing Library)
 ├── www/                           # (gerado, não versionado) build do frontend-react para o Capacitor
@@ -101,8 +96,6 @@ Currícula/
 ├── package.json
 ├── pyproject.toml                 # Configuração de ferramentas Python (ruff/black/isort)
 ├── pytest.ini                     # Configuração do pytest
-├── eslint.config.js               # Configuração de lint do frontend
-├── vitest.config.js
 ├── .dockerignore
 ├── .editorconfig
 ├── .gitattributes
@@ -113,7 +106,7 @@ Currícula/
 └── README.md
 ```
 
-> **Nota:** `www/` é o build do `frontend-react/` (`npm run build:android` dentro de `frontend-react/`, que roda `vite build --outDir ../www`), usado pelo Capacitor para empacotar o app Android. Não é versionado: rode `npm run build:android` antes de `npx cap sync android`. Na web, o Flask serve `frontend-react/dist` (`npm run build`); o `frontend/` (Vanilla JS) é só o fallback legado (ver `docs/architecture.md`).
+> **Nota:** `www/` é o build do `frontend-react/` (`npm run build:android` dentro de `frontend-react/`, que roda `vite build --outDir ../www`), usado pelo Capacitor para empacotar o app Android. Não é versionado: rode `npm run build:android` antes de `npx cap sync android`. Na web, o Flask serve `frontend-react/dist` (`npm run build`); o antigo `frontend/` (Vanilla JS) foi removido.
 
 ## ▶️ Como rodar localmente
 
@@ -130,8 +123,11 @@ source venv/bin/activate     # Linux/Mac
 # 3. Instale as dependências
 pip install -r backend/requirements.txt
 
-# 4. Configure as credenciais do Supabase em frontend/script.js
-#    (supabaseUrl e supabaseKey no topo do arquivo)
+# 4. Gere o build do frontend (Flask serve frontend-react/dist)
+cd frontend-react
+npm install
+npm run build
+cd ..
 
 # 5. Rode o servidor
 python backend/app.py
@@ -146,7 +142,8 @@ Para rodar os testes automatizados:
 pip install -r backend/requirements-dev.txt
 pytest backend/tests/ -v
 
-# Frontend (JavaScript)
+# Frontend (React)
+cd frontend-react
 npm install
 npm test
 ```
@@ -160,7 +157,9 @@ black --check .
 isort --check-only .
 
 # Frontend
+cd frontend-react
 npm run lint
+npx tsc -b
 ```
 
 ## 📱 Aplicativo Mobile
@@ -169,7 +168,6 @@ O app Android (via Capacitor) já está funcional — login (e-mail/senha e Goog
 
 ## 🗺️ Roadmap
 
-- [ ] Validar o frontend React em produção e aposentar `frontend/`
 - [ ] Versão iOS (requer Mac + Xcode)
 
 ## 🤝 Contribuindo

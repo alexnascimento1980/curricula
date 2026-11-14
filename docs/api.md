@@ -79,15 +79,13 @@ curl -X POST http://localhost:5000/generate-cv \
 
 ## Rotas de arquivo estático
 
-Servem a versão web legada (`frontend/`) — ver `docs/architecture.md` sobre por que isso ainda não é o build do `frontend-react`.
+Servem o build do `frontend-react` (`frontend-react/dist`, gerado por `npm run build`). Sem o build, `GET /` responde `503` com instrução e as demais rotas respondem `404` — só `/generate-cv` funciona.
 
 | Rota | Serve |
 |---|---|
-| `GET /` | `frontend/index.html` |
-| `GET /script.js` | `frontend/script.js` |
-| `GET /utils.js` | `frontend/utils.js` |
-| `GET /accessibility.js` | `frontend/accessibility.js` |
-| `GET /vendor/<caminho>` | `frontend/vendor/<caminho>` (Bootstrap, Font Awesome, `supabase-js` vendorizados localmente) |
+| `GET /` | `dist/index.html` |
+| `GET /<arquivo>` | arquivo existente em `dist/` (ex: `/assets/...`, `/favicon.svg`) |
+| `GET /<rota-sem-extensão>` | `dist/index.html` (fallback de SPA, ex: `/reset-password`) |
 
 Nenhuma dessas rotas tem rate limit próprio — são arquivos estáticos, sem processamento.
 

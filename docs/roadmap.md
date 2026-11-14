@@ -4,6 +4,8 @@ Este documento reflete o estado real do projeto, não uma lista de metas aspirac
 
 ## Concluído
 
+- **Fase 5**: Flask serve o build do React; `frontend/` legado removido.
+
 - **Backend**: API de geração de currículo (`/generate-cv`), validação de entrada completa, tradução automática PT→EN, rate limiting, cabeçalhos de segurança, Docker + Gunicorn para deploy.
 - **PDF acessível (v0.4.0)**: migração do pipeline de geração de LaTeX (`pdflatex`) para WeasyPrint (HTML/CSS → PDF), produzindo PDF/UA-1 de verdade — árvore de estrutura semântica, idioma e metadados corretos, texto alternativo nos links via pós-processamento com `pikepdf`.
 - **CI/CD (v0.3.1)**: GitHub Actions para testes, lint/code quality, templates de issue e PR.
@@ -15,14 +17,12 @@ Este documento reflete o estado real do projeto, não uma lista de metas aspirac
 
 ## Em andamento
 
-- **Migração frontend/ → frontend-react/ (Fase 5)**: o Flask já serve o build do React quando `frontend-react/dist` existe (Dockerfile multi-stage gera o build). Falta validar em produção/NVDA e então aposentar `frontend/` (e o `'unsafe-inline'` do CSP que ele exige).
-- **Paridade de acessibilidade** entre os dois frontends — o commit mais recente corrigiu regressões (h1, skip link, CSS de seção) só do lado React; falta confirmar que `frontend/` não tem os mesmos problemas ou já foi corrigido antes.
+- **Validação da Fase 5**: teste manual do React servido pelo Flask (login, PDF, NVDA) e em aparelho físico.
 
 ## Considerações em aberto (não comprometidas com prazo)
 
 Levantadas durante revisão do estado do projeto, ainda sem decisão tomada:
 
-- Decidir como e quando o Flask passa a servir o build do `frontend-react` em vez de `frontend/` (ou formalizar uma estratégia de transição), e o que fazer com `frontend/` depois disso.
 - Suporte a iOS (requer Mac + Xcode) — mencionado no `README.md`, sem trabalho iniciado.
 - Rotas de API cogitadas mas não implementadas: `/resume` (perfil salvo reutilizável), `/cover-letter`, `/match` (aderência a vaga), `/translate` como endpoint isolado.
 
