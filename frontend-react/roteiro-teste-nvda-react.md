@@ -12,7 +12,7 @@ integrada, com um leitor de tela de verdade.
 2. Gere o build e suba o Flask (ele serve o React em produção — é isso que
    deve ser testado, não o `npm run dev`):
    ```powershell
-   cd C:\Dev\CareerOS\CareerOS\frontend-react
+   cd C:\Dev\Curricula\frontend-react
    npm run build
    cd ..
    python backend\app.py
