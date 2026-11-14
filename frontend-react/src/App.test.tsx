@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { axe } from "vitest-axe";
 import { describe, expect, it, vi } from "vitest";
 import App from "./App";
 
@@ -40,5 +41,19 @@ describe("App", () => {
   it("o alvo do skip link (#main-content) existe de verdade", () => {
     render(<App />);
     expect(document.getElementById("main-content")).toBeInTheDocument();
+  });
+
+  it("não tem violações de acessibilidade detectáveis pelo axe-core (WCAG 2.1 A/AA)", async () => {
+    const { container } = render(<App />);
+    await screen.findAllByRole("heading", { level: 1 });
+    // O jsdom não calcula cores, então o contraste (color-contrast) é
+    // verificado fora daqui, rodando o axe num Chrome de verdade (ver
+    // docs/frontend.md). Aqui pegamos estrutura: rótulos, papéis ARIA, ids
+    // duplicados, ordem de headings, etc.
+    const resultado = await axe(container, {
+      runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] },
+      rules: { "color-contrast": { enabled: false } },
+    });
+    expect(resultado).toHaveNoViolations();
   });
 });

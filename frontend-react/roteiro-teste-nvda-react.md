@@ -9,17 +9,21 @@ integrada, com um leitor de tela de verdade.
 ## 1. Preparação
 
 1. NVDA já deve estar instalado (mesma instalação de antes).
-2. Suba os dois servidores, em terminais separados:
+2. Gere o build e suba o Flask (ele serve o React em produção — é isso que
+   deve ser testado, não o `npm run dev`):
    ```powershell
-   # Terminal 1
-   cd C:\Dev\CareerOS\CareerOS
-   python backend\app.py
-
-   # Terminal 2
    cd C:\Dev\CareerOS\CareerOS\frontend-react
-   npm run dev
+   npm run build
+   cd ..
+   python backend\app.py
    ```
-3. Abra `http://localhost:5173` no Chrome ou Edge.
+3. Abra `http://127.0.0.1:5000` no Chrome ou Edge.
+
+> Já verificado automaticamente (não precisa repetir à mão): contraste de
+> cores (axe-core em Chrome real: 0 violações nas telas inicial, de login e
+> do painel de acessibilidade) e estrutura ARIA (teste `vitest-axe` no CI).
+> O NVDA serve para o que o axe não pega: ordem de leitura, anúncios de
+> estado (autosave, erros), foco em modais/painéis e a experiência real.
 
 ## 2. Comandos essenciais (iguais a antes)
 
