@@ -286,10 +286,17 @@ def test_validar_dados_cv_summary_excede_limite_de_itens():
 
 def test_validar_dados_cv_summary_item_excede_limite_de_caracteres():
     d = payload_valido()
-    d["summary"]["pt"] = ["a" * (app_module.LIMITE_CARACTERES_DESCRICAO + 1)]
+    d["summary"]["pt"] = ["a" * (app_module.LIMITE_CARACTERES_RESUMO + 1)]
     ok, msg = app_module.validar_dados_cv(d)
     assert ok is False
     assert "summary.pt" in msg
+
+
+def test_validar_dados_cv_summary_aceita_resumo_de_ate_1500_caracteres():
+    d = payload_valido()
+    d["summary"]["pt"] = ["a" * app_module.LIMITE_CARACTERES_RESUMO]
+    ok, _ = app_module.validar_dados_cv(d)
+    assert ok
 
 
 def test_validar_dados_cv_skills_technical_item_excede_limite_de_caracteres():
