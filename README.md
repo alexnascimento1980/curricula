@@ -92,7 +92,7 @@ Currícula/
 │   └── utils.test.js              # Suíte de testes do frontend (Vitest)
 ├── frontend-react/                 # Reescrita em React + TypeScript, em migração (ver docs/frontend.md)
 │   └── src/                       # Componentes, hooks, testes (Vitest + Testing Library)
-├── www/                           # Build do frontend-react (vite build --outDir ../www), empacotado no app Android via Capacitor
+├── www/                           # (gerado, não versionado) build do frontend-react para o Capacitor
 ├── capacitor.config.json
 ├── CHANGELOG.md                   # Histórico de versões do projeto
 ├── CONTRIBUTING.md                # Guia de contribuição
@@ -113,7 +113,7 @@ Currícula/
 └── README.md
 ```
 
-> **Nota:** `www/` é o build do `frontend-react/` (`npm run build:android` dentro de `frontend-react/`, que roda `vite build --outDir ../www`), usado pelo Capacitor para empacotar o app Android — não edite `www/` diretamente. O `frontend/` (Vanilla JS) é servido separadamente pelo Flask e é o que roda na versão web hoje; os dois frontends ainda não estão unificados (ver `docs/architecture.md`).
+> **Nota:** `www/` é o build do `frontend-react/` (`npm run build:android` dentro de `frontend-react/`, que roda `vite build --outDir ../www`), usado pelo Capacitor para empacotar o app Android. Não é versionado: rode `npm run build:android` antes de `npx cap sync android`. Na web, o Flask serve `frontend-react/dist` (`npm run build`); o `frontend/` (Vanilla JS) é só o fallback legado (ver `docs/architecture.md`).
 
 ## ▶️ Como rodar localmente
 
