@@ -31,7 +31,7 @@ Encontrou uma vulnerabilidade? Veja a política de segurança do repositório pa
 
 ## 🧪 Testes Automatizados
 
-O backend tem uma suíte com **51 testes** (`pytest`), cobrindo validação de dados, normalização de URLs, o endpoint de geração de PDF de ponta a ponta (incluindo renderização real via WeasyPrint), e testes de regressão específicos da estrutura PDF/UA do arquivo gerado (árvore de estrutura semântica, idioma, texto alternativo dos links).
+O backend tem uma suíte com **63 testes** (`pytest`), cobrindo validação de dados, normalização de URLs, o endpoint de geração de PDF de ponta a ponta (incluindo renderização real via WeasyPrint), e testes de regressão específicos da estrutura PDF/UA do arquivo gerado (árvore de estrutura semântica, idioma, texto alternativo dos links).
 
 O frontend tem uma suíte com **21 testes** (`Vitest` + `jsdom`), cobrindo a lógica extraída para `frontend/utils.js`: normalização de URLs, formatação de datas, conversão de arquivo para base64, o toggle "Incluir no PDF?" (sem nunca marcar caixas de seleção como obrigatórias) e o debounce do autosave (incluindo o cenário de trocar de currículo rapidamente).
 

@@ -12,7 +12,7 @@
     "url": "git+https://github.com/alexnascimento1980/curricula.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "eslint": "^10.8.0",
     "jsdom": "^29.1.1",

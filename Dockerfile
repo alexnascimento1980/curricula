@@ -1,5 +1,5 @@
 # 1. Usa uma imagem oficial do Python, leve e baseada em Linux (Debian)
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 # 2. Define a pasta onde tudo vai acontecer dentro do container
 WORKDIR /app

@@ -11,6 +11,7 @@ from flask_limiter.util import get_remote_address
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pdf_gerador import gerar_pdf
 from texto_utils import remover_emojis
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Caminhos calculados a partir da localização deste arquivo, não da pasta
 # de onde o comando é executado — assim o app funciona igual rodando
@@ -20,6 +21,15 @@ FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
 TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
 app = Flask(__name__, static_folder=FRONTEND_DIR)
+
+# Atrás de proxy/load balancer (Render, Fly, nginx...), request.remote_addr é o
+# IP do proxy — todo mundo contaria como o mesmo cliente no rate limit. Defina
+# TRUSTED_PROXIES com o número de proxies confiáveis na frente do app (ex: 1)
+# para ler o IP real de X-Forwarded-For. Padrão 0 = não confia em cabeçalho
+# nenhum (evita que um cliente forje o IP e fure o limite).
+_trusted_proxies = int(os.environ.get("TRUSTED_PROXIES", "0") or 0)
+if _trusted_proxies > 0:
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=_trusted_proxies)
 
 # Protege contra payloads absurdamente grandes (abuso/DoS via geração de PDF).
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # 2 MB
@@ -43,17 +53,26 @@ _allowed_origins = (
     if _origins_env == "*"
     else [o.strip() for o in _origins_env.split(",") if o.strip()]
 )
+if _allowed_origins == "*" and os.environ.get("FLASK_DEBUG", "0") != "1":
+    app.logger.warning(
+        "ALLOWED_ORIGINS não definido: CORS liberado para qualquer origem. "
+        "Defina ALLOWED_ORIGINS em produção."
+    )
 CORS(app, resources={r"/generate-cv": {"origins": _allowed_origins}})
 
-# Cada chamada a /generate-cv dispara tradução (chamadas de rede) + compilação
-# LaTeX (uso pesado de CPU). Sem limite, uma única pessoa poderia sobrecarregar
+# Cada chamada a /generate-cv dispara tradução (chamadas de rede) + renderização
+# do PDF via WeasyPrint (uso pesado de CPU). Sem limite, uma única pessoa poderia sobrecarregar
 # o servidor repetindo a requisição. Os limites usam o IP por padrão; em
-# produção atrás de um proxy/load balancer, configure X-Forwarded-For.
+# produção atrás de um proxy/load balancer, defina TRUSTED_PROXIES (acima).
+#
+# O armazenamento padrão (memory://) é POR PROCESSO: com N workers do Gunicorn
+# o limite efetivo vira N x o configurado. Em produção com mais de um worker,
+# aponte RATELIMIT_STORAGE_URI para um Redis compartilhado (redis://host:6379).
 limiter = Limiter(
     key_func=get_remote_address,
     app=app,
     default_limits=[],
-    storage_uri="memory://",
+    storage_uri=os.environ.get("RATELIMIT_STORAGE_URI", "memory://"),
 )
 
 # URL do projeto Supabase, usada só para liberar no CSP (connect-src) — se
