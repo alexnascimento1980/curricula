@@ -1,3 +1,22 @@
+## [Não lançado]
+
+### Changed
+
+- Flask passa a servir o build do `frontend-react` (Fase 5); o `frontend/` legado (Vanilla JS) foi removido. CSP com `script-src 'self'`.
+- CI: o backend agora roda `pytest` no GitHub Actions; `tests.yml` cobre backend e `frontend-react`.
+- Rate limit: `TRUSTED_PROXIES` (`ProxyFix`) e `RATELIMIT_STORAGE_URI` (Redis) configuráveis; Python alinhado em 3.12.
+- Limite do resumo profissional sobe para 1500 caracteres (com contador no formulário).
+- Cores `info`/`warning` do Bootstrap escurecidas para atingir contraste WCAG AA.
+
+### Added
+
+- Teste de acessibilidade com `vitest-axe` no CI.
+- Dockerfile multi-stage (build do React em Node).
+
+### Removed
+
+- `www/` deixa de ser versionado (gerado por `npm run build:android`), `MainActivity` duplicado e patch antigo de acessibilidade.
+
 ## [0.4.0]
 
 ### Changed
