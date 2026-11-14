@@ -175,6 +175,14 @@ def frontend_react(caminho_arquivo):
     if caminho_completo is None:
         abort(404)
     if os.path.isfile(caminho_completo):
+        # Arquivos em assets/ têm hash no nome (mudam de nome a cada build),
+        # então podem ficar em cache por 1 ano sem risco de servir versão velha.
+        if caminho_arquivo.startswith("assets/"):
+            resposta = send_from_directory(
+                REACT_DIST_DIR, caminho_arquivo, max_age=31536000
+            )
+            resposta.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            return resposta
         return send_from_directory(REACT_DIST_DIR, caminho_arquivo)
     # Caminho com extensão (ex: /foo.js) que não existe é 404 de verdade;
     # rotas "limpas" do SPA (ex: /reset-password) devolvem o index.html.

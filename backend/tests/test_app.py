@@ -593,3 +593,11 @@ def test_com_dist_path_traversal_bloqueado(client, dist_react):
 
 def test_com_dist_get_em_generate_cv_nao_cai_no_spa(client, dist_react):
     assert client.get("/generate-cv").status_code in (404, 405)
+
+
+def test_com_dist_assets_com_hash_tem_cache_longo_e_index_nao(client, dist_react):
+    cache_assets = client.get("/assets/app.js").headers["Cache-Control"]
+    assert "max-age=31536000" in cache_assets and "immutable" in cache_assets
+    # O index.html referencia os assets por hash — não pode ficar em cache longo.
+    cache_index = client.get("/").headers.get("Cache-Control", "")
+    assert "31536000" not in cache_index
