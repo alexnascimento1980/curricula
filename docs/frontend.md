@@ -58,3 +58,7 @@ Roteiro do NVDA: `frontend-react/roteiro-teste-nvda-react.md` (repetir a cada mu
 ## Testes
 
 `npm test` (dentro de `frontend-react/`) roda Vitest com ambiente jsdom. `npm run lint` roda ESLint; `npx tsc -b` faz o typecheck completo (build em modo projeto, sem emitir JS — o build real é via `vite build`). Todos os três passam limpos como parte do CI (`.github/workflows/code-quality.yml`).
+
+## Testes ponta a ponta (E2E)
+
+`frontend-react/e2e/` tem testes Playwright que sobem o Flask servindo o build do React e abrem o Chrome instalado na máquina (`channel: "chrome"`, sem baixar browsers): carregamento sem violação de CSP, fallback da SPA, painel de acessibilidade, axe-core em Chrome real e cabeçalhos de segurança. Rodar: `npm run build` e depois `npm run test:e2e` em `frontend-react/` (precisa de Python com `backend/requirements.txt` instalado). No CI é o job `e2e` de `tests.yml`.
