@@ -4,7 +4,7 @@ Este documento reflete o estado real do projeto, não uma lista de metas aspirac
 
 ## Concluído
 
-- **Fase 5**: Flask serve o build do React; `frontend/` legado removido.
+- **Fase 5 (2026-11-13)**: Flask serve o build do React (`frontend-react/dist`, gerado num estágio Node do Dockerfile); `frontend/` legado removido; CSP com `script-src 'self'`. Validada em aparelho físico (Android), com axe-core em Chrome real (0 violações WCAG 2.1 A/AA, contraste incluído), teste `vitest-axe` no CI e leitor de tela NVDA.
 
 - **Backend**: API de geração de currículo (`/generate-cv`), validação de entrada completa, tradução automática PT→EN, rate limiting, cabeçalhos de segurança, Docker + Gunicorn para deploy.
 - **PDF acessível (v0.4.0)**: migração do pipeline de geração de LaTeX (`pdflatex`) para WeasyPrint (HTML/CSS → PDF), produzindo PDF/UA-1 de verdade — árvore de estrutura semântica, idioma e metadados corretos, texto alternativo nos links via pós-processamento com `pikepdf`.
@@ -13,11 +13,14 @@ Este documento reflete o estado real do projeto, não uma lista de metas aspirac
 - **Backup automático**: workflow diário exportando a tabela `curriculos` (o plano gratuito do Supabase não inclui backup).
 - **Dependabot**: atualização automática semanal de dependências Python (`/backend`), npm (raiz) e GitHub Actions.
 - **App Android**: funcional via Capacitor — login, múltiplos currículos, geração de PDF bilíngue e recuperação de senha testados em aparelho físico.
-- **Migração para React** (`frontend-react/`), fases 1 a 4: setup do projeto, autenticação completa, formulário principal completo, painel de currículos com persistência real. Alimenta hoje o build do app Android.
+- **Migração para React** (`frontend-react/`), fases 1 a 5: setup do projeto, autenticação completa, formulário principal, painel de currículos com persistência real e servido pelo Flask. Alimenta a web e o app Android.
 
 ## Em andamento
 
-- **Validação da Fase 5**: falta o teste manual com NVDA no React servido pelo Flask. Aparelho físico e axe-core (Chrome real) já passaram.
+- **Deploy da Fase 5 em produção**: conferir o build do Docker (estágio Node), definir `ALLOWED_ORIGINS` e `TRUSTED_PROXIES` no ambiente e confirmar os redirecionamentos de OAuth/recuperação de senha no Supabase.
+- **Dependências de desenvolvimento**: 7 avisos moderados do `npm audit` (`minimatch` dentro do `typescript-eslint`, só ferramenta de lint) — aguardando versão corrigida do `typescript-eslint`; produção está com 0.
+- **Tradução PT→EN**: `deep-translator` raspa o Google Translate (sem SLA) — avaliar cache ou API oficial.
+- **Testes do React**: limpar os avisos `act(...)` do `App` e do `ResumeWorkspace`.
 
 ## Considerações em aberto (não comprometidas com prazo)
 
