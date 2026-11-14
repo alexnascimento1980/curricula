@@ -14,13 +14,15 @@ Este documento reflete o estado real do projeto, não uma lista de metas aspirac
 - **Dependabot**: atualização automática semanal de dependências Python (`/backend`), npm (raiz) e GitHub Actions.
 - **App Android**: funcional via Capacitor — login, múltiplos currículos, geração de PDF bilíngue e recuperação de senha testados em aparelho físico.
 - **Migração para React** (`frontend-react/`), fases 1 a 5: setup do projeto, autenticação completa, formulário principal, painel de currículos com persistência real e servido pelo Flask. Alimenta a web e o app Android.
+- **Produção (2026-11-14)**: deploy da Fase 5 no Render validado (login, geração de PDF, resumo longo, app Android contra o servidor novo).
+- **Testes E2E** (Playwright, Flask + Chrome real, job `e2e` no CI): CSP, fallback da SPA, painel de acessibilidade, axe-core e cabeçalhos de segurança.
+- **Cache LRU das traduções PT→EN** (`TRADUCAO_CACHE_MAX`) e **bundle separado em chunks** com cache longo nos assets; scripts `npm run android` / `android:open` na raiz.
+- **Nome do projeto**: menções ao nome antigo (CareerOS) removidas do repositório; o serviço no Render mantém o endereço `careeros-mcau.onrender.com` por compatibilidade com o app Android já instalado.
 
 ## Em andamento
 
-- **Deploy da Fase 5 em produção**: conferir o build do Docker (estágio Node), definir `ALLOWED_ORIGINS` e `TRUSTED_PROXIES` no ambiente e confirmar os redirecionamentos de OAuth/recuperação de senha no Supabase.
 - **Dependências de desenvolvimento**: 7 avisos moderados do `npm audit` (`minimatch` dentro do `typescript-eslint`, só ferramenta de lint) — aguardando versão corrigida do `typescript-eslint`; produção está com 0.
-- **Tradução PT→EN**: `deep-translator` raspa o Google Translate (sem SLA) — avaliar cache ou API oficial.
-- **Testes do React**: limpar os avisos `act(...)` do `App` e do `ResumeWorkspace`.
+- **Tradução PT→EN**: o cache em memória reduz chamadas repetidas, mas o `deep-translator` segue sendo scraping do Google Translate (sem SLA) — avaliar API oficial (Google Cloud Translation ou DeepL) se o volume crescer.
 
 ## Considerações em aberto (não comprometidas com prazo)
 
