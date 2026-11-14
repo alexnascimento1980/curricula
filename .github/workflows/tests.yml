@@ -38,11 +38,6 @@ jobs:
         with:
           node-version: 22
 
-      - name: Testes do frontend legado (raiz)
-        run: |
-          npm install
-          npm test
-
       - name: Testes e build do frontend-react
         working-directory: frontend-react
         run: |

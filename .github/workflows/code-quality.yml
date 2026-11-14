@@ -29,10 +29,6 @@ jobs:
         with:
           node-version: 22
 
-      - run: npm install
-
-      - run: npm run lint
-
       # frontend-react/ é o novo frontend em migração incremental (React +
       # TypeScript) — projeto Node independente, com seu próprio
       # package.json, então cada passo roda com working-directory dedicado.

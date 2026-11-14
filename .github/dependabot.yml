@@ -15,7 +15,7 @@ updates:
       - "dependencies"
       - "backend"
 
-  # Dependências do frontend/build (Capacitor, eslint, vitest, etc).
+  # Dependências do Capacitor (app Android).
   - package-ecosystem: "npm"
     directory: "/"
     schedule:

@@ -18,16 +18,16 @@ from werkzeug.utils import safe_join
 # de onde o comando é executado — assim o app funciona igual rodando
 # localmente (python backend/app.py) ou dentro do Docker.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
-# Build do frontend React (npm run build em frontend-react/ -> dist/). Quando
-# existe, o Flask serve ele no lugar do frontend/ legado (Fase 5 da migração).
-# Sem o build (ex: dev local sem rodar o npm), cai no frontend/ legado.
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+# Build do frontend React (npm run build em frontend-react/ -> dist/), servido
+# pelo Flask. Sem o build, só a API (/generate-cv) funciona.
 REACT_DIST_DIR = os.environ.get(
     "FRONTEND_DIST", os.path.join(BASE_DIR, "..", "frontend-react", "dist")
 )
-TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 
-app = Flask(__name__, static_folder=FRONTEND_DIR)
+# static_folder=None: os arquivos do front são servidos pelas rotas abaixo
+# (dist/ do React), não pela rota /static padrão do Flask.
+app = Flask(__name__, static_folder=None)
 
 # Atrás de proxy/load balancer (Render, Fly, nginx...), request.remote_addr é o
 # IP do proxy — todo mundo contaria como o mesmo cliente no rate limit. Defina
@@ -129,25 +129,13 @@ def adicionar_cabecalhos_seguranca(response):
     )
 
     # Restringe de onde scripts/estilos/fontes podem ser carregados, em vez
-    # de liberar geral. Precisa de 'unsafe-inline' em script/style porque o
-    # index.html hoje usa atributos onclick="..." e style="..." inline —
-    # isso enfraquece um pouco a proteção contra XSS baseado em script
-    # inline, mas ainda bloqueia carregar script/estilo de qualquer domínio
-    # de terceiros não listado aqui, que é o vetor mais comum.
-    #
-    # Bootstrap, Font Awesome e supabase-js são servidos localmente (ver
-    # frontend/vendor/) em vez de vir de CDN — isso não é só uma questão de
-    # CSP, foi o que resolveu o login não funcionar no app Android
-    # empacotado: se o CDN falhasse ao carregar num aparelho real, o
-    # supabaseClient nunca era criado e toda a autenticação quebrava
-    # silenciosamente. Só o Google Fonts continua externo (cosmético —
-    # se falhar, cai pro fallback de fonte do sistema, não quebra nada).
-    # O build do React não usa script inline, então 'unsafe-inline' em
-    # script-src só é liberado enquanto o frontend/ legado estiver sendo servido.
-    script_src = "'self'" if _servindo_react() else "'self' 'unsafe-inline'"
+    # de liberar geral. O build do React não usa script inline, então
+    # script-src fica estrito ('self'). style-src mantém 'unsafe-inline' porque
+    # a UI usa atributos style="..." (React/Bootstrap). Só o Google Fonts
+    # continua externo (cosmético — se falhar, cai pro fonte do sistema).
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        f"script-src {script_src}; "
+        "script-src 'self'; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data:; "
@@ -167,39 +155,19 @@ def _servindo_react():
 
 @app.route("/")
 def index():
-    pasta = REACT_DIST_DIR if _servindo_react() else FRONTEND_DIR
-    return send_from_directory(pasta, "index.html")
-
-
-@app.route("/script.js")
-def script():
-    return send_from_directory(FRONTEND_DIR, "script.js")
-
-
-@app.route("/utils.js")
-def utils_js():
-    return send_from_directory(FRONTEND_DIR, "utils.js")
-
-
-@app.route("/accessibility.js")
-def accessibility_js():
-    return send_from_directory(FRONTEND_DIR, "accessibility.js")
-
-
-@app.route("/vendor/<path:caminho_arquivo>")
-def vendor(caminho_arquivo):
-    # Bibliotecas de terceiros empacotadas localmente (bootstrap, font
-    # awesome, supabase-js) — ver frontend/vendor/. send_from_directory já
-    # bloqueia tentativas de sair da pasta (ex: "../../app.py").
-    return send_from_directory(os.path.join(FRONTEND_DIR, "vendor"), caminho_arquivo)
+    if not _servindo_react():
+        return (
+            "Frontend não encontrado: rode 'npm run build' em frontend-react/.",
+            503,
+        )
+    return send_from_directory(REACT_DIST_DIR, "index.html")
 
 
 @app.route("/<path:caminho_arquivo>")
 def frontend_react(caminho_arquivo):
     """Arquivos estáticos do build React (assets/, favicon...) + fallback de SPA.
 
-    Só atua quando o dist/ existe; sem ele, qualquer caminho desconhecido é 404
-    como antes. send_from_directory/safe_join bloqueiam path traversal.
+    Só atua quando o dist/ existe; sem ele, qualquer caminho é 404. send_from_directory/safe_join bloqueiam path traversal.
     """
     if not _servindo_react() or caminho_arquivo.startswith("generate-cv"):
         abort(404)

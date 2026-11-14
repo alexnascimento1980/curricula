@@ -15,7 +15,7 @@ Aplicados a toda resposta do Flask (`backend/app.py`, `adicionar_cabecalhos_segu
 | `Permissions-Policy` | `geolocation=(), microphone=(), camera=()` | Desliga APIs de hardware que o app não usa. |
 | `Content-Security-Policy` | ver abaixo | Restringe de onde script/estilo/fonte podem carregar. |
 
-**CSP**: `default-src 'self'`, com `script-src`/`style-src` liberando `'unsafe-inline'` (necessário porque `frontend/index.html` ainda usa `onclick="..."` e `style="..."` inline — enfraquece a proteção contra XSS via script inline, mas continua bloqueando carregar recursos de domínios de terceiros não listados). Bootstrap, Font Awesome e `supabase-js` são vendorizados localmente (`frontend/vendor/`) em vez de vir de CDN — não é só uma questão de CSP: resolveu um bug real em que o login quebrava silenciosamente no app Android quando o CDN falhava ao carregar num aparelho físico. `connect-src` libera explicitamente a URL do projeto Supabase e a API do IBGE (usada para o autocomplete de cidade/estado).
+**CSP**: `default-src 'self'`, `script-src 'self'` (sem `'unsafe-inline'` — o build do React não usa script inline), `style-src` com `'unsafe-inline'` e Google Fonts (a UI usa atributos `style`), `connect-src` liberando o projeto Supabase e a API do IBGE (autocomplete de cidade/estado). Bootstrap e Font Awesome entram empacotados no bundle, sem CDN.
 
 **Nota importante**: esses cabeçalhos protegem só a versão web (servida via HTTP pelo Flask). O app Android/iOS carrega uma cópia empacotada do HTML localmente — a proteção equivalente ali vem do sandbox do sistema operacional, não desses cabeçalhos.
 

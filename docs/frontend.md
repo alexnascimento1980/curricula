@@ -1,21 +1,8 @@
 # Frontend
 
-O projeto tem dois frontends coexistindo hoje, por causa de uma migração em andamento — não é uma escolha definitiva de arquitetura. Ver `docs/architecture.md` para o porquê e as implicações disso.
+O frontend é `frontend-react/` (React + TypeScript + Vite). O antigo `frontend/` (Vanilla JS) foi removido após a migração; o histórico dele está no git.
 
-## `frontend/` — versão legada (fallback quando não há `dist/`)
-
-Vanilla JS + Bootstrap 5, servido diretamente pelo Flask (`backend/app.py`). É o que qualquer pessoa acessando o site hoje efetivamente usa.
-
-- `index.html` — formulário e estrutura da página.
-- `script.js` — toda a lógica: autenticação (Supabase), CRUD de currículos, montagem do payload para `/generate-cv`, autosave com debounce.
-- `utils.js` — funções puras extraídas para serem testáveis isoladamente (normalização de URL, formatação de data, conversão de arquivo para base64, etc).
-- `utils.test.js` — suíte de testes (Vitest + jsdom), 21 testes.
-- `vendor/` — Bootstrap, Font Awesome e `supabase-js` empacotados localmente (não via CDN) — ver `docs/security.md` para o motivo (CSP + confiabilidade no app Android empacotado).
-- `accessibility.js` — ajustes de acessibilidade específicos dessa versão.
-
-Estado: funcional e testado, mas é a base que está sendo substituída. Novas features de UI não devem mais ser adicionadas aqui — vão para `frontend-react/`.
-
-## `frontend-react/` — reescrita em andamento
+## `frontend-react/`
 
 React 19 + TypeScript + Vite, com testes via Vitest + Testing Library (`@testing-library/react`, `@testing-library/user-event`). Desde a Fase 5, o Flask serve o build dela (`frontend-react/dist`, gerado por `npm run build`) quando ele existe; sem o build, cai no `frontend/` legado. O mesmo código alimenta o app Android (`npm run build:android` → `www/`).
 
@@ -56,20 +43,14 @@ Cada componente/hook com lógica não-trivial tem um `*.test.tsx`/`*.test.ts` ao
 3. **Fase 3** — formulário principal completo (todas as seções, incluindo os blocos repetíveis de experiência/formação/cursos/projetos).
 4. **Fase 4** — painel de currículos (múltiplos currículos por usuário) e persistência real via Supabase (`resumeService.ts`, `useResumeManager.ts`), substituindo o que antes era só estado local.
 
-Depois disso: um commit de correção de regressões de acessibilidade (h1, skip link, CSS de seção) — sinal de que a paridade com `frontend/` (que já tinha passado por ajustes de acessibilidade) ainda está sendo fechada aos poucos.
+5. **Fase 5** — o Flask serve o build (`frontend-react/dist`); `frontend/` legado removido; CSP com `script-src 'self'`.
 
-### O que falta para essa migração ser "completa"
-
-Não há uma Fase 5 formalizada no repositório ainda. Os itens em aberto, na prática:
-
-- Decidir como o Flask passa a servir o build do `frontend-react` em vez de `frontend/` — ou uma estratégia de transição (ex: feature flag, subdomínio de staging).
-- Confirmar paridade de funcionalidade com `frontend/` (o vendor local de libs, o `accessibility.js`, comportamento de autosave em cenários de erro de rede).
-- Aposentar `frontend/` e `www/` como artefato separado, ou formalizar `www/` como o único destino de build (web e Android a partir da mesma fonte).
+Pendente: validação manual de acessibilidade com NVDA e teste em aparelho físico (ver `roteiro-teste-nvda-react.md`).
 
 ## Convenções específicas do React
 
-- Nomes de função/variável em português para lógica de domínio (`salvarCurriculo`, `buscarCurriculoPorId`, `carregarPorId`), mesmo padrão já usado em `frontend/script.js` — consistência deliberada entre os dois frontends durante a migração.
-- ESLint do `frontend-react/eslint.config.js` mantém `semi: always` e `quotes: double` — mesmo estilo do ESLint do `frontend/` (`eslint.config.js` na raiz), para reduzir atrito de quem alterna entre os dois códigos durante a transição.
+- Nomes de função/variável em português para lógica de domínio (`salvarCurriculo`, `buscarCurriculoPorId`, `carregarPorId`) — consistência deliberada entre os dois frontends durante a migração.
+- ESLint do `frontend-react/eslint.config.js` mantém `semi: always` e `quotes: double`.
 - `dangerouslySetInnerHTML` não é usado em nenhum componente — toda renderização de conteúdo do usuário passa pelo escaping padrão do React.
 
 ## Testes

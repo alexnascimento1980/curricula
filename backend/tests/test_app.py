@@ -556,14 +556,11 @@ def dist_react(tmp_path, monkeypatch):
     return tmp_path
 
 
-def test_sem_dist_serve_frontend_legado(client, monkeypatch, tmp_path):
+def test_sem_dist_raiz_devolve_503_com_instrucao(client, monkeypatch, tmp_path):
     monkeypatch.setattr(app_module, "REACT_DIST_DIR", str(tmp_path / "inexistente"))
     resp = client.get("/")
-    assert resp.status_code == 200
-    assert b"REACT" not in resp.data
-    assert (
-        "script-src 'self' 'unsafe-inline'" in resp.headers["Content-Security-Policy"]
-    )
+    assert resp.status_code == 503
+    assert b"npm run build" in resp.data
     assert client.get("/rota-qualquer").status_code == 404
 
 
@@ -574,7 +571,7 @@ def test_com_dist_serve_react_na_raiz_e_assets(client, dist_react):
     assert b"console.log" in resp.data
 
 
-def test_com_dist_csp_sem_unsafe_inline_em_script(client, dist_react):
+def test_csp_script_src_estrito_sem_unsafe_inline(client, dist_react):
     csp = client.get("/").headers["Content-Security-Policy"]
     assert "script-src 'self';" in csp
 

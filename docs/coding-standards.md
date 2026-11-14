@@ -15,9 +15,9 @@ black --check .
 isort --check-only .
 ```
 
-## JavaScript / TypeScript (`frontend/` e `frontend-react/`)
+## JavaScript / TypeScript (`frontend-react/`)
 
-- **ESLint** — configuração própria em cada projeto (`eslint.config.js` na raiz para `frontend/`, `frontend-react/eslint.config.js` para o React). Ambos fixam `semi: ["error", "always"]` e `quotes: ["error", "double"]` deliberadamente iguais, para reduzir atrito de quem alterna entre os dois códigos durante a migração.
+- **ESLint** — `frontend-react/eslint.config.js`. Fixa `semi: ["error", "always"]` e `quotes: ["error", "double"]` deliberadamente iguais, para reduzir atrito de quem alterna entre os dois códigos durante a migração.
 - **Prettier** — `.prettierrc` na raiz: `printWidth: 100`, `semi: true`, `singleQuote: false` (aspas duplas, consistente com o ESLint), `tabWidth: 2`, `trailingComma: "none"`.
 - **TypeScript** (só `frontend-react/`) — `strict` via `typescript-eslint` recomendado + `tsc -b` no CI antes do build; nenhum `any` implícito deve passar sem justificativa.
 - `frontend-react/` usa `eslint-plugin-react-hooks` (regras de hooks) e `eslint-plugin-react-refresh` (garante que arquivos de componente só exportem componentes, necessário para Fast Refresh funcionar).
@@ -25,9 +25,6 @@ isort --check-only .
 Rodar antes de abrir PR:
 
 ```bash
-# frontend/ (raiz)
-npm run lint
-
 # frontend-react/
 cd frontend-react
 npm run lint
@@ -45,7 +42,6 @@ O padrão do projeto é comentar o **porquê**, não o **o quê** — o código 
 ## Testes
 
 - **Backend**: `pytest`, arquivos em `backend/tests/test_*.py`, um teste por comportamento (não por função) — ex: `test_validar_dados_cv_linkedin_dominio_errado`, `test_validar_dados_cv_experience_excede_limite`. Fixtures e parametrização (`@pytest.mark.parametrize`) usadas para variações do mesmo caso (ex: diferentes formatos de e-mail inválido).
-- **Frontend (`frontend/`)**: Vitest + jsdom, testando a lógica extraída para `utils.js` — funções puras, sem depender de DOM real quando possível.
 - **Frontend-react**: Vitest + Testing Library (`@testing-library/react`, `@testing-library/user-event`). Convenção: arquivo de teste ao lado do arquivo testado (`Componente.tsx` + `Componente.test.tsx`), não em pasta separada.
 - Testes de regressão específicos existem para comportamento não-óbvio, ex: a estrutura semântica do PDF/UA gerado (árvore de estrutura, idioma, texto alternativo dos links) — não é só "o PDF foi gerado", é "o PDF tem a estrutura de acessibilidade correta".
 

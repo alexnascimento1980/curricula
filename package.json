@@ -1,23 +1,14 @@
 {
   "name": "curricula",
   "version": "1.0.0",
-  "description": "Currícula - Gerador de Currículo ATS Bilíngue",
+  "description": "Currícula - dependências do Capacitor (app Android). O frontend fica em frontend-react/.",
   "type": "module",
-  "scripts": {
-    "test": "vitest run",
-    "lint": "eslint frontend"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alexnascimento1980/curricula.git"
   },
   "author": "",
   "license": "MIT",
-  "devDependencies": {
-    "eslint": "^10.8.0",
-    "jsdom": "^29.1.1",
-    "vitest": "^4.1.10"
-  },
   "dependencies": {
     "@capacitor/android": "^8.4.2",
     "@capacitor/app": "^8.1.1",
