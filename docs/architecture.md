@@ -63,7 +63,7 @@ Esse é o ponto mais importante para quem for mexer no projeto agora:
 
 Na prática: com o `dist/` presente, web e Android já rodam a mesma base de código. O `frontend/` legado só continua no repositório como fallback, até ser aposentado — correções de UI devem ir só para `frontend-react/`.
 
-`www/` é build artefato (gerado, não escrito à mão) e está versionado no git — não editar diretamente; qualquer mudança deve entrar via `frontend-react/src` e depois `npm run build:android`.
+`www/` é build artefato (gerado, não escrito à mão) e **não é versionado** (está no `.gitignore`) — gere com `npm run build:android` antes de `npx cap sync android`; qualquer mudança de UI entra via `frontend-react/src`.
 
 ### Persistência e autenticação (Supabase)
 
