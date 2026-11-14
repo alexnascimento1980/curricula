@@ -51,6 +51,10 @@ app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024  # 2 MB
 LIMITE_ITENS_LISTA_TEXTO = 30
 LIMITE_CARACTERES_TITULO = 200
 LIMITE_CARACTERES_DESCRICAO = 500
+# O resumo profissional chega como UM item (o textarea inteiro), então precisa
+# de um limite maior que o dos demais textos. Continua bem abaixo do limite de
+# ~5000 caracteres por requisição do serviço de tradução.
+LIMITE_CARACTERES_RESUMO = 1500
 
 # Em produção, defina ALLOWED_ORIGINS (separado por vírgulas) para restringir
 # quem pode chamar a API. Em desenvolvimento, libera tudo por padrão.
@@ -300,7 +304,9 @@ def validar_dados_cv(data):
     summary = data.get("summary")
     if not isinstance(summary, dict):
         return False, "O bloco 'summary' é obrigatório e deve ser um objeto."
-    ok, erro = _validar_lista_de_textos(summary.get("pt", []), "summary.pt")
+    ok, erro = _validar_lista_de_textos(
+        summary.get("pt", []), "summary.pt", LIMITE_CARACTERES_RESUMO
+    )
     if not ok:
         return False, erro
 

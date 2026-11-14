@@ -1,3 +1,6 @@
+// Mesmo limite do backend (LIMITE_CARACTERES_RESUMO em backend/app.py).
+export const LIMITE_RESUMO = 1500;
+
 interface ResumoSectionProps {
   valor: string;
   onMudar: (valor: string) => void;
@@ -16,11 +19,16 @@ export function ResumoSection({ valor, onMudar }: ResumoSectionProps) {
         <textarea
           className="form-control"
           id="summary_pt"
-          rows={4}
+          rows={6}
           required
+          maxLength={LIMITE_RESUMO}
+          aria-describedby="summary_pt_contador"
           value={valor}
           onChange={(e) => onMudar(e.target.value)}
         />
+        <div id="summary_pt_contador" className="form-text text-end">
+          {valor.length} / {LIMITE_RESUMO} caracteres
+        </div>
       </div>
     </>
   );
