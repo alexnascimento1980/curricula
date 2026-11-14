@@ -58,3 +58,7 @@ Thumbs.db
 
 # Temporary documentation
 docs/tmp/
+
+# Playwright
+frontend-react/test-results/
+frontend-react/playwright-report/
