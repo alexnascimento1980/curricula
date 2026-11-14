@@ -18,7 +18,7 @@ export function SectionToggleHeader({
       <h2 className="mb-0 text-primary section-title">
         <span className="section-num">{numero}</span> {titulo}
       </h2>
-      <div className="form-check form-switch fs-5">
+      <div className="form-check form-switch">
         <input
           className="form-check-input"
           type="checkbox"

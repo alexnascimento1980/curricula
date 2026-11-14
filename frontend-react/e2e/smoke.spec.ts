@@ -53,6 +53,9 @@ test.describe("Smoke: React servido pelo Flask", () => {
   test("axe-core: nenhuma violação WCAG 2.1 A/AA (contraste incluído)", async ({
     page,
   }) => {
+    // Sem animações: o aviso de login entra com fade/slide e o axe mede o
+    // contraste com ele ainda semitransparente (falso positivo).
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/");
     await expect(
       page.getByRole("heading", { level: 1, name: "Currícula" }),
