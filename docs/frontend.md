@@ -45,7 +45,9 @@ Cada componente/hook com lógica não-trivial tem um `*.test.tsx`/`*.test.ts` ao
 
 5. **Fase 5** — o Flask serve o build (`frontend-react/dist`); `frontend/` legado removido; CSP com `script-src 'self'`.
 
-Pendente: validação manual de acessibilidade com NVDA e teste em aparelho físico (ver `roteiro-teste-nvda-react.md`).
+Validado: teste em aparelho físico (Android) e axe-core em Chrome real (0 violações WCAG 2.1 A/AA, incluindo contraste). O CI roda um teste `vitest-axe` na árvore do `App` (estrutura/ARIA; contraste não, porque o jsdom não calcula cores — por isso as cores `info`/`warning` do Bootstrap foram escurecidas em `styles/global.css`).
+
+Pendente: validação manual com NVDA (ver `roteiro-teste-nvda-react.md`).
 
 ## Convenções específicas do React
 

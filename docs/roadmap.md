@@ -17,7 +17,7 @@ Este documento reflete o estado real do projeto, não uma lista de metas aspirac
 
 ## Em andamento
 
-- **Validação da Fase 5**: teste manual do React servido pelo Flask (login, PDF, NVDA) e em aparelho físico.
+- **Validação da Fase 5**: falta o teste manual com NVDA no React servido pelo Flask. Aparelho físico e axe-core (Chrome real) já passaram.
 
 ## Considerações em aberto (não comprometidas com prazo)
 
