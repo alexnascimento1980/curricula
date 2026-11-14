@@ -1,75 +1,34 @@
-# Currícula — Frontend React (em migração)
+# Currícula — Frontend React
 
-Este é o novo frontend em **React + TypeScript + Vite**, construído do lado
-do app atual (`frontend/`, Vanilla JS) sem substituí-lo ainda — migração
-incremental ("strangler fig"), não reescrita de uma vez. O app antigo
-continua em produção normalmente enquanto este vai sendo construído por
-fases.
+Frontend em **React + TypeScript + Vite**. Desde a Fase 5 ele é o único
+frontend do projeto: o Flask serve o build (`dist/`) na web, e o mesmo
+build é empacotado pelo Capacitor no app Android. O antigo `frontend/`
+(Vanilla JS) foi removido.
 
-## Por que incremental, e não reescrita completa
+## Como a migração foi feita
 
-O app atual tem 51 testes de backend, 21 de frontend, certificação PDF/UA-1
-e acessibilidade validada manualmente com NVDA. Uma reescrita completa de
-uma vez arrisca perder rigor de acessibilidade no meio da tradução (timing
-de `aria-live`, ordem de foco em modais, etc.) sem ninguém perceber até
-tarde. Migrando por fases, cada uma sai testada e validada antes da
-próxima começar.
+A migração foi incremental ("strangler fig"), em fases, para não perder
+rigor de acessibilidade (timing de `aria-live`, ordem de foco em modais,
+etc.) numa reescrita de uma vez. Cada fase saiu testada antes da próxima.
 
-## Fases
-
-- [x] **Fase 0 — Fundação:** projeto Vite + React + TypeScript, ESLint
-      (flat config, mesmo estilo do `frontend/` antigo), Vitest +
-      Testing Library.
-- [x] **Fase 1 — Barra de acessibilidade:** `AccessibilityPanel` —
-      tamanho de fonte, alto contraste, redução de movimento. Porta fiel
-      do `frontend/accessibility.js` original, incluindo o comportamento
-      de foco (abre → foco no primeiro controle; Esc → fecha e devolve o
-      foco; clique fora → fecha sem devolver foco).
+- [x] **Fase 0 — Fundação:** Vite + React + TypeScript, ESLint (flat
+      config), Vitest + Testing Library.
+- [x] **Fase 1 — Barra de acessibilidade:** `AccessibilityPanel` (tamanho
+      de fonte, alto contraste, redução de movimento), com gerenciamento
+      de foco (abre → primeiro controle; Esc → fecha e devolve o foco).
 - [x] **Fase 2 — Autenticação:** login/cadastro/Google, recuperação de
-      senha (incluindo o fluxo OAuth nativo Android, hoje via imports reais
-      de `@capacitor/core`/`@capacitor/app`/`@capacitor/browser` — ver nota
-      da Fase 5 abaixo), `AuthContext` + `useAuth()`. Trouxe Bootstrap
-      e Font Awesome via npm nesta fase (antes do previsto — precisava
-      dos modais). Componente `Modal` reutilizável envolve o
-      `bootstrap.Modal` imperativo numa API declarativa (`open`/`onClose`),
-      com sincronia nos dois sentidos (Esc/clique-fora no Bootstrap
-      também atualiza o estado do React). 43 testes cobrindo sessão,
-      validação de formulário, foco e o próprio `Modal`.
-- [x] **Fase 3 — Formulário principal:** blocos dinâmicos (Experiência,
-      Formação, Cursos, Projetos) com adicionar/remover, cascata
-      Estado→Cidade via API do IBGE, máscara de telefone, limpeza de URL
-      do LinkedIn/GitHub ao sair do campo, toggles "Incluir no PDF?" (cada
-      um controla o `required` dos campos da sua seção), autosave com
-      debounce (mecanismo pronto — o `onAutosave` de verdade entra na
-      Fase 4, junto da troca de currículo), geração e download do PDF
-      (incluindo o caminho nativo Android via Filesystem+Share). 86
-      testes no total do projeto.
-- [x] **Fase 4 — Painel de currículos salvos + persistência real:**
-      `useResumeManager` orquestra lista, seleção, criação, renomeação e
-      exclusão de currículos no Supabase; autosave de verdade conectado
-      (com `flush` obrigatório antes de trocar de currículo); painel
-      lateral (`Offcanvas`, análogo ao `Modal` da Fase 2); modal
-      compartilhado para criar/renomear; indicador de status
-      "Salvando.../Salvo". 108 testes no total do projeto.
-- [~] **Fase 5 — Corte final (em andamento — feito o lado Android, web
-      pendente):**
-  - [x] Trocado `window.Capacitor.Plugins.X` (tipos inventados à mão) por
-        imports reais (`@capacitor/core`, `@capacitor/app`,
-        `@capacitor/browser`, `@capacitor/filesystem`, `@capacitor/share`)
-        — tipos de verdade, não mais um `.d.ts` ambiente escrito por mim.
-  - [x] Script `npm run build:android` (builda direto pra `../www`) +
-        `npx cap sync android` testados de ponta a ponta — o app Android
-        já empacota o build do React, não mais do `frontend/` antigo.
-  - [ ] **Ainda não testado em dispositivo físico** (dependência externa,
-        não é um bloqueio de código).
-  - [ ] Revalidação de acessibilidade com NVDA na versão React (foi
-        validada peça por peça em cada fase, mas nunca ponta a ponta como
-        um todo já integrado).
-  - [ ] Corte da versão **web**: `backend/app.py` ainda serve o
-        `frontend/` antigo em produção — só migra quando as duas
-        validações acima passarem. Decisão deliberada: o Android tem
-        menos usuários em risco que o site em produção, então corta
-        primeiro o lado de menor risco.
+      senha, fluxo OAuth nativo Android (`@capacitor/*`), `AuthContext` +
+      `useAuth()`, componente `Modal` sobre o `bootstrap.Modal`.
+- [x] **Fase 3 — Formulário principal:** blocos dinâmicos, cascata
+      Estado→Cidade (IBGE), máscaras, toggles "Incluir no PDF?", autosave
+      com debounce, geração e download do PDF (inclusive no Android).
+- [x] **Fase 4 — Currículos salvos:** `useResumeManager` (lista, criação,
+      renomeação, exclusão no Supabase), autosave com `flush` antes de
+      trocar de currículo, painel lateral e indicador "Salvando.../Salvo".
+- [x] **Fase 5 — Corte final:** Flask serve o build do React, `frontend/`
+      removido, CSP `script-src 'self'`. Validada em aparelho físico
+      Android, com axe-core em Chrome real (0 violações), teste
+      `vitest-axe` no CI e NVDA.
 
 ## Comandos
 
@@ -83,6 +42,9 @@ npm test          # Vitest (roda uma vez)
 npm run test:watch  # Vitest em modo watch
 ```
 
+Para rodar tudo servido pelo Flask: `npm run build` aqui e, na raiz,
+`python backend/app.py` (abre em `http://127.0.0.1:5000`).
+
 Depois de `build:android`, sincronize com o projeto nativo (rodar a partir
 da raiz do repositório, não daqui de dentro):
 ```bash
@@ -95,18 +57,14 @@ npx cap sync android
 - **TypeScript** em vez de JS puro — pega erro de payload/estado em tempo
   de build.
 - **ESLint flat config**, não o `oxlint` que o Vite usa por padrão hoje —
-  mantém consistência com o `frontend/eslint.config.js` já existente e com
-  o workflow de CI (`code-quality.yml`), que já roda ESLint.
-- **Vitest + Testing Library**, não Jest — o projeto já usa Vitest no
-  frontend antigo; reaproveitar a mesma ferramenta em vez de introduzir uma
-  segunda.
-- **Bootstrap + Font Awesome via npm** (não vendorizado manualmente como
-  no `frontend/` antigo) — o bundler já resolve isso direito, sem precisar
-  da gambiarra de servir `vendor/` por uma rota Flask dedicada.
+  consistente com o workflow de CI (`code-quality.yml`), que roda ESLint.
+- **Vitest + Testing Library**, não Jest — uma ferramenta só, integrada ao
+  Vite. `vitest-axe` cobre acessibilidade automatizada.
+- **Bootstrap + Font Awesome via npm** — o bundler resolve
+  isso, sem servir `vendor/` por uma rota Flask dedicada.
 - **`bootstrap.Modal` real, não uma reimplementação em React** — o
   componente `Modal` é um wrapper fino em cima da classe JS imperativa do
-  Bootstrap (focus trap, Esc, aria-modal já resolvidos e validados no app
-  antigo com NVDA). Escuta o evento `hidden.bs.modal` pra manter o estado
+  Bootstrap (focus trap, Esc, aria-modal já resolvidos e validados com NVDA). Escuta o evento `hidden.bs.modal` pra manter o estado
   do React sincronizado quando o modal fecha por fora (clique no
   backdrop/Esc), não só quando fechamos programaticamente.
 - **CSS global (`src/styles/global.css`) para as classes de acessibilidade
@@ -126,8 +84,8 @@ npx cap sync android
 
 - **Proxy do Vite pro backend Flask em dev** (`vite.config.ts`) — sem
   isso, `fetch("/generate-cv")` cairia no próprio servidor do Vite (porta
-  5173), que não tem essa rota. Em produção (Fase 5, quando este app for
-  servido pelo próprio Flask) o proxy não é necessário, já é same-origin.
+  5173), que não tem essa rota. Em produção o Flask serve o build, então
+  é same-origin e o proxy não é necessário.
 - **`useAutosave` genérico, aceitando um `onAutosave` opcional** — o
   `CurriculoForm` não sabe (nem precisa saber) COMO os dados são
   persistidos; isso mantém o formulário testável isoladamente sem mockar
@@ -146,30 +104,21 @@ npx cap sync android
   padrão de "buscar dados ao mudar uma prop" é uma exceção legítima,
   documentada pelo próprio React).
 
-## Aviso de tamanho do bundle
+## Bundle
 
-O build mostra um aviso de chunk grande (~520KB JS antes de gzip,
-principalmente Bootstrap + Font Awesome + Supabase). Não é um erro — só
-uma sugestão de otimização (code-splitting) pra revisitar depois que a
-migração terminar, não antes.
+O `vite.config.ts` separa as bibliotecas em chunks (`react`, `supabase`,
+`bootstrap`, `capacitor`, `vendor`); o código do app fica em ~52 kB. O Flask
+serve `assets/` com cache de 1 ano (`immutable`), já que os nomes têm hash.
 
-- **`npm run build:android` builda direto pra `../www`** em vez de gerar
-  em `dist/` e copiar depois — o Vite já suporta `--outDir` fora da pasta
-  do projeto nativamente, então não precisa de um passo de cópia manual
-  (que era exatamente o tipo de coisa que causava bug no app antigo: uma
-  vez um `Copy-Item -Recurse` do PowerShell aninhou a pasta `vendor`
-  dentro dela mesma porque o destino já existia).
-- **Corte em duas etapas (Android primeiro, web depois)** — o Android
-  ainda não foi publicado pra usuários finais reais, então o risco de
-  cortar pra lá primeiro é bem menor que trocar o que está servindo o
-  site em produção agora. Só migra o `backend/app.py` pra servir o build
-  do React depois que o Android for validado em aparelho físico e a
-  acessibilidade for revalidada com NVDA na versão integrada.
+## Android
 
-## O que ainda não foi portado
+`npm run build:android` builda direto para `../www` (não versionado) em vez
+de gerar em `dist/` e copiar — evita o bug antigo de cópia aninhada no
+PowerShell. Na raiz, `npm run android` faz build + `cap sync`, e
+`npm run android:open` abre o Android Studio. Teste em aparelho físico: o
+emulador pode falhar em algumas máquinas.
 
-O fluxo OAuth nativo (Android) está portado e tipado, mas só é
-efetivamente testável depois que este projeto entrar de verdade no build
-do Capacitor (Fase 5) — hoje `window.Capacitor` nunca existe rodando
-`npm run dev` num navegador comum, então esse caminho específico só tem
-cobertura de tipos, não de teste automatizado.
+## Acessibilidade
+
+Roteiro manual com NVDA em `roteiro-teste-nvda-react.md` (repetir a cada
+mudança grande de UI). O axe-core roda no CI via `vitest-axe`.
