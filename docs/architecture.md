@@ -57,10 +57,11 @@ O backend **não tem banco de dados próprio**. Toda persistência de currículo
 
 Esse é o ponto mais importante para quem for mexer no projeto agora:
 
-- **`frontend/`** (HTML/CSS/JS puro + Bootstrap) é o que o Flask efetivamente serve como site (`app.py` aponta `FRONTEND_DIR` para essa pasta, e é o que o `Dockerfile` empacota). **É a versão em produção na web hoje.**
-- **`frontend-react/`** (React 19 + TypeScript + Vite) é a reescrita em andamento, com testes (Vitest + Testing Library), autenticação, formulário e painel de currículos já migrados. **Ainda não está ligada ao backend Flask** — hoje ela só alimenta o build do app Android (`npm run build:android` gera `www/`, que o Capacitor empacota).
+- **`frontend-react/`** é servido pelo Flask quando `frontend-react/dist` existe (`REACT_DIST_DIR` em `app.py`, com fallback de SPA para `index.html`; o `Dockerfile` gera o build num estágio Node). Nesse modo o CSP usa `script-src 'self'`, sem `'unsafe-inline'`.
+- **`frontend/`** (HTML/CSS/JS puro + Bootstrap) é o fallback legado: só é servido quando não há `dist/`. Está de saída.
+- **`frontend-react/`** (React 19 + TypeScript + Vite) é a reescrita, com testes (Vitest + Testing Library), autenticação, formulário e painel de currículos migrados. Alimenta tanto a web (via `dist/` servido pelo Flask) quanto o app Android (`npm run build:android` gera `www/`, que o Capacitor empacota).
 
-Na prática: a versão web e a versão Android rodam bases de código diferentes até que alguém decida trocar o que o Flask serve, ou aposentar `frontend/`. Enquanto isso não acontecer, uma correção feita só em um dos dois (como já aconteceu com os ajustes de acessibilidade do commit `6d66d80`, que só chegou ao Android) não se propaga para o outro automaticamente — isso precisa ser lembrado manualmente em cada mudança de UI.
+Na prática: com o `dist/` presente, web e Android já rodam a mesma base de código. O `frontend/` legado só continua no repositório como fallback, até ser aposentado — correções de UI devem ir só para `frontend-react/`.
 
 `www/` é build artefato (gerado, não escrito à mão) e está versionado no git — não editar diretamente; qualquer mudança deve entrar via `frontend-react/src` e depois `npm run build:android`.
 

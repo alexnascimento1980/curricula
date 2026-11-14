@@ -2,7 +2,7 @@
 
 O projeto tem dois frontends coexistindo hoje, por causa de uma migração em andamento — não é uma escolha definitiva de arquitetura. Ver `docs/architecture.md` para o porquê e as implicações disso.
 
-## `frontend/` — versão em produção na web (legado)
+## `frontend/` — versão legada (fallback quando não há `dist/`)
 
 Vanilla JS + Bootstrap 5, servido diretamente pelo Flask (`backend/app.py`). É o que qualquer pessoa acessando o site hoje efetivamente usa.
 
@@ -17,7 +17,7 @@ Estado: funcional e testado, mas é a base que está sendo substituída. Novas f
 
 ## `frontend-react/` — reescrita em andamento
 
-React 19 + TypeScript + Vite, com testes via Vitest + Testing Library (`@testing-library/react`, `@testing-library/user-event`). Ainda **não está servida pelo Flask** — hoje ela só alimenta o build do app Android.
+React 19 + TypeScript + Vite, com testes via Vitest + Testing Library (`@testing-library/react`, `@testing-library/user-event`). Desde a Fase 5, o Flask serve o build dela (`frontend-react/dist`, gerado por `npm run build`) quando ele existe; sem o build, cai no `frontend/` legado. O mesmo código alimenta o app Android (`npm run build:android` → `www/`).
 
 ### Estrutura
 

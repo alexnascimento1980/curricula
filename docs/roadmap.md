@@ -15,7 +15,7 @@ Este documento reflete o estado real do projeto, não uma lista de metas aspirac
 
 ## Em andamento
 
-- **Migração frontend/ → frontend-react/**: a versão React ainda não está ligada ao Flask (que continua servindo `frontend/` na web). Ver `docs/architecture.md` e `docs/frontend.md` para o estado exato dessa divergência.
+- **Migração frontend/ → frontend-react/ (Fase 5)**: o Flask já serve o build do React quando `frontend-react/dist` existe (Dockerfile multi-stage gera o build). Falta validar em produção/NVDA e então aposentar `frontend/` (e o `'unsafe-inline'` do CSP que ele exige).
 - **Paridade de acessibilidade** entre os dois frontends — o commit mais recente corrigiu regressões (h1, skip link, CSS de seção) só do lado React; falta confirmar que `frontend/` não tem os mesmos problemas ou já foi corrigido antes.
 
 ## Considerações em aberto (não comprometidas com prazo)
