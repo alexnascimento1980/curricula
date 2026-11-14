@@ -169,6 +169,7 @@ O app Android (via Capacitor) já está funcional — login (e-mail/senha e Goog
 
 ## 🗺️ Roadmap
 
+- [ ] Validar o frontend React em produção e aposentar `frontend/`
 - [ ] Versão iOS (requer Mac + Xcode)
 
 ## 🤝 Contribuindo

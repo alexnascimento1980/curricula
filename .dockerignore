@@ -10,3 +10,6 @@ node_modules/
 docs/
 backend/tests/
 saida/
+frontend-react/node_modules/
+frontend-react/dist/
+node_modules/
