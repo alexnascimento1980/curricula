@@ -601,3 +601,38 @@ def test_com_dist_assets_com_hash_tem_cache_longo_e_index_nao(client, dist_react
     # O index.html referencia os assets por hash — não pode ficar em cache longo.
     cache_index = client.get("/").headers.get("Cache-Control", "")
     assert "31536000" not in cache_index
+
+
+# --- Cache de traduções ---
+
+
+@pytest.fixture
+def cache_limpo():
+    app_module._traducao_cache.clear()
+    yield
+    app_module._traducao_cache.clear()
+
+
+def test_traduzir_texto_usa_cache_na_segunda_chamada(cache_limpo):
+    with patch("app.GoogleTranslator") as gt:
+        gt.return_value.translate.return_value = "Hello"
+        assert app_module.traduzir_texto("Olá") == ("Hello", True)
+        assert app_module.traduzir_texto("Olá") == ("Hello", True)
+    assert gt.return_value.translate.call_count == 1
+
+
+def test_traduzir_texto_nao_cacheia_falha(cache_limpo):
+    with patch("app.GoogleTranslator") as gt, patch("app.time.sleep"):
+        gt.return_value.translate.side_effect = RuntimeError("bloqueado")
+        assert app_module.traduzir_texto("Olá") == ("Olá", False)
+        gt.return_value.translate.side_effect = None
+        gt.return_value.translate.return_value = "Hello"
+        assert app_module.traduzir_texto("Olá") == ("Hello", True)
+
+
+def test_cache_traducao_descarta_o_mais_antigo(cache_limpo, monkeypatch):
+    monkeypatch.setattr(app_module, "TRADUCAO_CACHE_MAX", 2)
+    for chave in ("a", "b", "c"):
+        app_module._cache_traducao_set(chave, chave.upper())
+    assert app_module._cache_traducao_get("a") is None
+    assert app_module._cache_traducao_get("c") == "C"

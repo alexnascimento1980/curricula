@@ -33,6 +33,8 @@ O template Jinja2 usa `autoescape=select_autoescape(["html"])` e **nenhum filtro
 
 `/generate-cv` é limitado a 10 requisições/minuto e 60/hora por IP (`Flask-Limiter`), porque cada chamada combina uma chamada de rede (tradução) com uso pesado de CPU (renderização do PDF via WeasyPrint) — sem isso, uma única pessoa repetindo a requisição conseguiria sobrecarregar o servidor. Em produção atrás de proxy/load balancer, defina `TRUSTED_PROXIES` (número de proxies confiáveis, ex: `1`) para o app ler o IP real via `X-Forwarded-For` (`ProxyFix`); sem isso todas as requisições contam como vindas do proxy. O armazenamento padrão é em memória e **por worker** do Gunicorn: com mais de um worker, defina `RATELIMIT_STORAGE_URI` (ex: `redis://host:6379`) para um limite compartilhado.
 
+As traduções PT→EN bem-sucedidas ficam num cache LRU em memória (por worker; `TRADUCAO_CACHE_MAX`, padrão 2048, `0` desativa), o que reduz as chamadas ao Google Translate e o risco de bloqueio por excesso de requisições. Falhas não são cacheadas.
+
 ## CORS
 
 Restrito via variável de ambiente `ALLOWED_ORIGINS` (lista separada por vírgulas). **Se não configurada, o padrão é `"*"`** (liberado geral; o app registra um aviso no log ao subir) — isso é intencional para facilitar desenvolvimento local, mas precisa ser setado explicitamente no deploy de produção. Vale conferir isso no checklist de deploy; hoje não há nada que force essa configuração (a aplicação sobe normalmente sem ela).

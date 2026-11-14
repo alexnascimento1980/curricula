@@ -1,6 +1,8 @@
+import collections
 import concurrent.futures
 import io
 import os
+import threading
 import time
 
 from deep_translator import GoogleTranslator
@@ -359,6 +361,34 @@ def validar_dados_cv(data):
     return True, "Dados validados com sucesso"
 
 
+# Cache em memória das traduções bem-sucedidas (LRU, por processo). Currículos
+# repetem muito texto entre gerações (cargos, cursos, habilidades, e o mesmo
+# currículo regerado após pequenos ajustes), então isso reduz as chamadas ao
+# Google Translate (scraping, sem SLA) e o risco de bloqueio por excesso de
+# requisições. Falhas nunca entram no cache. TRADUCAO_CACHE_MAX=0 desativa.
+TRADUCAO_CACHE_MAX = int(os.environ.get("TRADUCAO_CACHE_MAX", "2048"))
+_traducao_cache = collections.OrderedDict()
+_traducao_cache_lock = threading.Lock()
+
+
+def _cache_traducao_get(texto):
+    with _traducao_cache_lock:
+        if texto in _traducao_cache:
+            _traducao_cache.move_to_end(texto)
+            return _traducao_cache[texto]
+    return None
+
+
+def _cache_traducao_set(texto, traduzido):
+    if TRADUCAO_CACHE_MAX <= 0:
+        return
+    with _traducao_cache_lock:
+        _traducao_cache[texto] = traduzido
+        _traducao_cache.move_to_end(texto)
+        while len(_traducao_cache) > TRADUCAO_CACHE_MAX:
+            _traducao_cache.popitem(last=False)
+
+
 def traduzir_texto(texto, tentativas=2):
     """Traduz um texto PT->EN. Retorna (texto_traduzido, sucesso).
 
@@ -370,10 +400,15 @@ def traduzir_texto(texto, tentativas=2):
     """
     if not texto:
         return "", True
+    em_cache = _cache_traducao_get(texto)
+    if em_cache is not None:
+        return em_cache, True
     ultimo_erro = None
     for tentativa in range(tentativas):
         try:
-            return GoogleTranslator(source="pt", target="en").translate(texto), True
+            traduzido = GoogleTranslator(source="pt", target="en").translate(texto)
+            _cache_traducao_set(texto, traduzido)
+            return traduzido, True
         except Exception as e:  # noqa: BLE001 — biblioteca de terceiros (scraping
             # não-oficial) não documenta quais exceções lança; um retry genérico
             # é a estratégia correta aqui, não uma omissão.
