@@ -532,3 +532,60 @@ def test_rate_limit_bloqueia_apos_10_requisicoes_por_minuto():
     # já que o limite é aplicado antes da lógica da rota
     assert respostas.count(429) >= 2
     app_module.limiter.reset()
+
+
+# ==========================================
+# Servir o build do frontend-react (Fase 5)
+# ==========================================
+
+
+@pytest.fixture
+def dist_react(tmp_path, monkeypatch):
+    """Simula um build do React (dist/) e aponta o Flask para ele."""
+    (tmp_path / "assets").mkdir()
+    (tmp_path / "index.html").write_text("<!doctype html><div id=root>REACT</div>")
+    (tmp_path / "assets" / "app.js").write_text("console.log('ok')")
+    monkeypatch.setattr(app_module, "REACT_DIST_DIR", str(tmp_path))
+    return tmp_path
+
+
+def test_sem_dist_serve_frontend_legado(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(app_module, "REACT_DIST_DIR", str(tmp_path / "inexistente"))
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert b"REACT" not in resp.data
+    assert (
+        "script-src 'self' 'unsafe-inline'" in resp.headers["Content-Security-Policy"]
+    )
+    assert client.get("/rota-qualquer").status_code == 404
+
+
+def test_com_dist_serve_react_na_raiz_e_assets(client, dist_react):
+    assert b"REACT" in client.get("/").data
+    resp = client.get("/assets/app.js")
+    assert resp.status_code == 200
+    assert b"console.log" in resp.data
+
+
+def test_com_dist_csp_sem_unsafe_inline_em_script(client, dist_react):
+    csp = client.get("/").headers["Content-Security-Policy"]
+    assert "script-src 'self';" in csp
+
+
+def test_com_dist_rota_do_spa_cai_no_index(client, dist_react):
+    resp = client.get("/reset-password")
+    assert resp.status_code == 200
+    assert b"REACT" in resp.data
+
+
+def test_com_dist_arquivo_inexistente_com_extensao_e_404(client, dist_react):
+    assert client.get("/assets/nao-existe.js").status_code == 404
+
+
+def test_com_dist_path_traversal_bloqueado(client, dist_react):
+    assert client.get("/../app.py").status_code in (301, 308, 404)
+    assert client.get("/assets/..%2f..%2fapp.py").status_code == 404
+
+
+def test_com_dist_get_em_generate_cv_nao_cai_no_spa(client, dist_react):
+    assert client.get("/generate-cv").status_code in (404, 405)

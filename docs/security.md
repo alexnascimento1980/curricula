@@ -21,9 +21,9 @@ Aplicados a toda resposta do Flask (`backend/app.py`, `adicionar_cabecalhos_segu
 
 ## Validação de entrada
 
-`validar_dados_cv` (`backend/app.py`) roda antes de qualquer processamento em `/generate-cv`: tipo de cada bloco, presença de campos obrigatórios, formato de e-mail, domínio de LinkedIn/GitHub, limite de itens por lista (`experience` ≤ 30, `education` ≤ 15, `courses`/`projects` ≤ 30) e tamanho máximo do nome (200 caracteres). Coberto por 39 testes em `backend/tests/test_app.py`.
+`validar_dados_cv` (`backend/app.py`) roda antes de qualquer processamento em `/generate-cv`: tipo de cada bloco, presença de campos obrigatórios, formato de e-mail, domínio de LinkedIn/GitHub, limite de itens por lista (`experience` ≤ 30, `education` ≤ 15, `courses`/`projects` ≤ 30) e tamanho máximo do nome (200 caracteres). Coberto por testes em `backend/tests/test_app.py`.
 
-**Gap conhecido**: os limites acima cobrem quantos *itens* cada lista pode ter, mas não quantas strings (`highlights`, por exemplo) cada item individual pode conter, nem o tamanho de cada string além do limite geral de payload (`MAX_CONTENT_LENGTH = 2 MB`). Como cada string vira uma chamada de tradução via `ThreadPoolExecutor`, um payload dentro do limite de 2 MB mas com muitas strings curtas pode gerar um volume desproporcional de chamadas de saída ao serviço de tradução por requisição — possível vetor de abuso/amplificação, ainda sem limite dedicado nem teste de regressão.
+Campos de texto livre têm limite de caracteres e de quantidade de itens (`LIMITE_ITENS_LISTA_TEXTO = 30`, `LIMITE_CARACTERES_TITULO = 200`, `LIMITE_CARACTERES_DESCRICAO = 500`), validados por `_validar_texto` / `_validar_lista_de_textos` antes da tradução — isso limita o número de chamadas ao serviço de tradução por requisição.
 
 ## Escaping / prevenção de XSS no PDF
 
@@ -31,11 +31,11 @@ O template Jinja2 usa `autoescape=select_autoescape(["html"])` e **nenhum filtro
 
 ## Rate limiting
 
-`/generate-cv` é limitado a 10 requisições/minuto e 60/hora por IP (`Flask-Limiter`), porque cada chamada combina uma chamada de rede (tradução) com uso pesado de CPU (renderização do PDF via WeasyPrint) — sem isso, uma única pessoa repetindo a requisição conseguiria sobrecarregar o servidor. Em produção atrás de proxy/load balancer, `X-Forwarded-For` precisa estar configurado corretamente, senão todas as requisições contam como vindas do mesmo IP (o proxy).
+`/generate-cv` é limitado a 10 requisições/minuto e 60/hora por IP (`Flask-Limiter`), porque cada chamada combina uma chamada de rede (tradução) com uso pesado de CPU (renderização do PDF via WeasyPrint) — sem isso, uma única pessoa repetindo a requisição conseguiria sobrecarregar o servidor. Em produção atrás de proxy/load balancer, defina `TRUSTED_PROXIES` (número de proxies confiáveis, ex: `1`) para o app ler o IP real via `X-Forwarded-For` (`ProxyFix`); sem isso todas as requisições contam como vindas do proxy. O armazenamento padrão é em memória e **por worker** do Gunicorn: com mais de um worker, defina `RATELIMIT_STORAGE_URI` (ex: `redis://host:6379`) para um limite compartilhado.
 
 ## CORS
 
-Restrito via variável de ambiente `ALLOWED_ORIGINS` (lista separada por vírgulas). **Se não configurada, o padrão é `"*"`** (liberado geral) — isso é intencional para facilitar desenvolvimento local, mas precisa ser setado explicitamente no deploy de produção. Vale conferir isso no checklist de deploy; hoje não há nada que force essa configuração (a aplicação sobe normalmente sem ela).
+Restrito via variável de ambiente `ALLOWED_ORIGINS` (lista separada por vírgulas). **Se não configurada, o padrão é `"*"`** (liberado geral; o app registra um aviso no log ao subir) — isso é intencional para facilitar desenvolvimento local, mas precisa ser setado explicitamente no deploy de produção. Vale conferir isso no checklist de deploy; hoje não há nada que force essa configuração (a aplicação sobe normalmente sem ela).
 
 ## Tamanho de payload e modo debug
 

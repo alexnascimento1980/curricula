@@ -1,5 +1,15 @@
+# 0. Estágio de build do frontend React (Node só existe neste estágio; a
+# imagem final continua só com Python). O resultado é frontend-react/dist,
+# que o Flask serve no lugar do frontend/ legado.
+FROM node:22-slim AS frontend
+WORKDIR /build
+COPY frontend-react/package.json frontend-react/package-lock.json ./
+RUN npm ci
+COPY frontend-react/ ./
+RUN npm run build
+
 # 1. Usa uma imagem oficial do Python, leve e baseada em Linux (Debian)
-FROM python:3.10-slim
+FROM python:3.12-slim
 
 # 2. Define a pasta onde tudo vai acontecer dentro do container
 WORKDIR /app
@@ -28,6 +38,9 @@ RUN pip install --no-cache-dir -r backend/requirements.txt
 
 # 6. Copia todo o resto do seu projeto (backend/, frontend/, etc.)
 COPY . .
+
+# 6b. Build do React gerado no estágio anterior
+COPY --from=frontend /build/dist /app/frontend-react/dist
 
 # 7. Informa que o container vai se comunicar pela porta 5000
 EXPOSE 5000
