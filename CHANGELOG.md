@@ -2,6 +2,7 @@
 
 ### Changed
 
+- App Android atualizado para a versão 1.1 (`versionCode` 2): empacota o frontend React com o tema editorial restaurado, o limite de 1500 caracteres no resumo e o cache de tradução do servidor.
 - Flask passa a servir o build do `frontend-react` (Fase 5); o `frontend/` legado (Vanilla JS) foi removido. CSP com `script-src 'self'`.
 - CI: o backend agora roda `pytest` no GitHub Actions; `tests.yml` cobre backend e `frontend-react`.
 - Rate limit: `TRUSTED_PROXIES` (`ProxyFix`) e `RATELIMIT_STORAGE_URI` (Redis) configuráveis; Python alinhado em 3.12.
