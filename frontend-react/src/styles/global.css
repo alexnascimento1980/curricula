@@ -6,6 +6,19 @@
   --navy: #1e3a5f;
   --navy-dark: #16293f;
   --navy-tint: #e7edf3;
+
+  /* Faz botões, links e afins do Bootstrap herdarem a paleta editorial em
+     vez do azul padrão (#0d6efd). */
+  --bs-primary: var(--navy);
+  --bs-primary-rgb: 30, 58, 95;
+  --bs-primary-text-emphasis: var(--navy);
+  --bs-primary-bg-subtle: var(--navy-tint);
+  --bs-primary-border-subtle: var(--navy);
+  --bs-link-color: var(--navy);
+  --bs-link-color-rgb: 30, 58, 95;
+  --bs-link-hover-color: var(--navy-dark);
+  --bs-link-hover-color-rgb: 22, 41, 63;
+  --bs-body-font-family: "Inter", system-ui, sans-serif;
 }
 
 * {
@@ -111,8 +124,13 @@ html.a11y-high-contrast body {
 }
 
 @keyframes pulse-save {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 .saving {
   animation: pulse-save 1s infinite;
@@ -176,34 +194,155 @@ html.a11y-high-contrast .masthead {
 }
 
 /*
- * Contraste (WCAG 2.1 AA, mínimo 4.5:1 para texto): as cores "info" (#0dcaf0)
- * e "warning" (#ffc107) padrão do Bootstrap têm contraste de só 1.95:1 e
- * 1.63:1 sobre fundo branco. Aqui só escurecemos as variantes usadas como
- * texto/borda/botão contornado — mantendo o tom (ciano e âmbar). O axe-core
- * (npm test) e o roteiro NVDA/contraste dependem disso.
+ * Tema editorial (portado do app antigo). O Bootstrap 5.3 não propaga
+ * --bs-primary para todo componente, então reforçamos os controles usados.
+ * Todas as cores abaixo foram conferidas para contraste WCAG 2.1 AA (>= 4.5:1
+ * como texto sobre branco): navy 11.5, azul-petróleo 6.1, oliva 5.6,
+ * âmbar escuro 5.3. O âmbar original do app antigo (#a87c1f) dava só 3.8:1,
+ * por isso foi escurecido para #8a6500.
  */
-.text-info,
-.badge.bg-info {
-  --bs-info-rgb: 8, 121, 144; /* #087990 — 5.6:1 sobre branco */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.modal-title,
+#resumeModalTitle,
+#current-resume-title {
+  font-family: "Source Serif 4", serif;
 }
 
+.btn-primary {
+  background-color: var(--navy) !important;
+  border-color: var(--navy) !important;
+}
+.btn-primary:hover,
+.btn-primary:active {
+  background-color: var(--navy-dark) !important;
+  border-color: var(--navy-dark) !important;
+}
+.btn-outline-primary {
+  color: var(--navy) !important;
+  border-color: var(--navy) !important;
+}
+.btn-outline-primary:hover {
+  background-color: var(--navy) !important;
+  color: var(--paper) !important;
+}
+.text-primary {
+  color: var(--navy) !important;
+}
+.bg-gradient-primary {
+  background: var(--navy);
+}
+
+.form-check-input {
+  border-color: #7d7767; /* borda do controle visível (>= 3:1, WCAG 1.4.11) */
+}
+.form-check-input:checked {
+  background-color: var(--navy);
+  border-color: var(--navy);
+}
+.form-check-input:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 0.25rem rgba(30, 58, 95, 0.2);
+}
+
+.card {
+  border-radius: 10px !important;
+  border: 1px solid var(--paper-line) !important;
+  box-shadow: none !important;
+}
+.form-control,
+.form-select {
+  border-radius: 6px;
+  border: 1px solid #cec7b8;
+}
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 0.2rem rgba(30, 58, 95, 0.15);
+}
+.btn-add {
+  border-radius: 20px;
+  font-weight: 600;
+  padding: 6px 16px;
+}
+
+.alert {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+}
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Blocos dinâmicos (Experiência/Formação/Cursos/Projetos): só uma faixa
+   colorida à esquerda, no lugar da borda grossa nos 4 lados que o
+   `border-4` do Bootstrap gera. */
+.card.border-start.border-4 {
+  border-width: 1px 1px 1px 4px !important;
+  border-color: var(--paper-line) !important;
+}
+.card.border-start.border-4.border-primary {
+  border-left-color: var(--navy) !important;
+}
+.card.border-start.border-4.border-info {
+  border-left-color: #4a6670 !important;
+}
+.card.border-start.border-4.border-success {
+  border-left-color: #5c6e3c !important;
+}
+.card.border-start.border-4.border-warning {
+  border-left-color: #8a6500 !important;
+}
+
+.text-info {
+  color: #4a6670 !important;
+}
+.text-success {
+  color: #5c6e3c !important;
+}
 .text-warning {
-  --bs-warning-rgb: 138, 101, 0; /* #8a6500 — 5.3:1 sobre branco */
+  color: #8a6500 !important;
+}
+.badge.bg-info {
+  background-color: #4a6670 !important;
 }
 
 .btn-outline-info {
-  --bs-btn-color: #087990;
-  --bs-btn-border-color: #087990;
+  --bs-btn-color: #4a6670;
+  --bs-btn-border-color: #4a6670;
   --bs-btn-hover-color: #fff;
-  --bs-btn-hover-bg: #087990;
-  --bs-btn-hover-border-color: #087990;
+  --bs-btn-hover-bg: #4a6670;
+  --bs-btn-hover-border-color: #4a6670;
   --bs-btn-active-color: #fff;
-  --bs-btn-active-bg: #087990;
-  --bs-btn-active-border-color: #087990;
-  --bs-btn-disabled-color: #087990;
-  --bs-btn-disabled-border-color: #087990;
+  --bs-btn-active-bg: #4a6670;
+  --bs-btn-active-border-color: #4a6670;
+  --bs-btn-disabled-color: #4a6670;
+  --bs-btn-disabled-border-color: #4a6670;
 }
-
+.btn-outline-success {
+  --bs-btn-color: #5c6e3c;
+  --bs-btn-border-color: #5c6e3c;
+  --bs-btn-hover-color: #fff;
+  --bs-btn-hover-bg: #5c6e3c;
+  --bs-btn-hover-border-color: #5c6e3c;
+  --bs-btn-active-color: #fff;
+  --bs-btn-active-bg: #5c6e3c;
+  --bs-btn-active-border-color: #5c6e3c;
+  --bs-btn-disabled-color: #5c6e3c;
+  --bs-btn-disabled-border-color: #5c6e3c;
+}
 .btn-outline-warning {
   --bs-btn-color: #8a6500;
   --bs-btn-border-color: #8a6500;
@@ -215,4 +354,28 @@ html.a11y-high-contrast .masthead {
   --bs-btn-active-border-color: #8a6500;
   --bs-btn-disabled-color: #8a6500;
   --bs-btn-disabled-border-color: #8a6500;
+}
+
+/* Caixa de exportação (idioma + botão final) */
+.export-box {
+  background-color: var(--navy-tint) !important;
+  border-color: var(--paper-line) !important;
+}
+.btn-generate {
+  background-color: #5c6e3c !important;
+  border-color: #5c6e3c !important;
+  color: var(--paper) !important;
+  white-space: nowrap;
+}
+.btn-generate:hover {
+  background-color: #4a5a2f !important;
+  border-color: #4a5a2f !important;
+}
+
+/* Celular: campos empilhados ganham respiro entre si (as colunas do
+   Bootstrap só têm margem quando lado a lado). */
+@media (max-width: 767.98px) {
+  .row > [class*="col-md-"] + [class*="col-md-"] {
+    margin-top: 1rem;
+  }
 }

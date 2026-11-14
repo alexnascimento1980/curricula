@@ -202,7 +202,7 @@ export function CurriculoForm({
 
       <div className="export-box p-4 rounded-3 border mt-5 mb-4">
         <div className="row align-items-center">
-          <div className="col-md-8">
+          <div className="col-md-7">
             <label className="form-label fw-bold" htmlFor="idioma_escolhido">
               Idioma de Saída:
             </label>
@@ -221,7 +221,7 @@ export function CurriculoForm({
               <option value="en">🇺🇸 Inglês</option>
             </select>
           </div>
-          <div className="col-md-4 mt-4 mt-md-0 d-grid">
+          <div className="col-md-5 mt-4 mt-md-0 d-grid">
             <button
               type="submit"
               className="btn btn-generate btn-lg rounded-pill"
