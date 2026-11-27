@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ResumeWorkspace } from "./ResumeWorkspace";
@@ -65,8 +65,10 @@ describe("ResumeWorkspace", () => {
     listarCurriculos.mockResolvedValue([]);
   });
 
-  it("não mostra a barra de título do currículo quando deslogado", () => {
-    render(<ResumeWorkspace notificar={vi.fn()} />);
+  it("não mostra a barra de título do currículo quando deslogado", async () => {
+    await act(async () => {
+      render(<ResumeWorkspace notificar={vi.fn()} />);
+    });
     expect(
       screen.queryByRole("button", { name: /Meus Currículos/ }),
     ).not.toBeInTheDocument();
